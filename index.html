@@ -3,18 +3,35 @@
 
     <script type="text/javascript">
 
-function random_3(){
-    var myrandom=Math.round(Math.random()*2)
-    var link1="http://www.codingforums.com"
-    var link2="http://www.cssdrive.com"
-    var link3="http://www.dynamicdrive.com"
-    if (myrandom==0)
-        window.location=link1
-    else if (myrandom==1)
-        window.location=link2
-    else if (myrandom==2)
-        window.location=link3
+
+    var randomLink = function () {
+
+        // first create an array of links
+        var links = [
+            "bbc.com",
+            "google.com",
+            "youtube.com",
+        "facebook.com"
+        ];
+
+        // then work out the maximum random number size
+        // by counting the number of links in the array
+        var max = (links.length)
+
+        // now generate a random number
+        var randomNumber = Math.floor(Math.random()*max);
+
+        // use that random number to retrieve a link from the array
+        var link = links[randomNumber];
+
+        // change the location of the window object
+        window.location = "http://" + link;
+
+        // Opens a new tab.
+        function OpenInNewTab(url) {
+        var win = window.open(url, '_blank');
+         win.focus();
 }
-   
+    }
     </script>
 </html>
