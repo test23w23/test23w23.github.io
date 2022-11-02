@@ -13,7 +13,7 @@ webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSdjjtjCVrovMpGDH-9JlBwmX
 //------------------------------------------
 var random_page = Math.floor(Math.random()*webpages.length);
 var redirect = webpages[random_page];
-return HtmlService.createHtmlOutput("<script>location.href = '" + redirect + "';</script>")
+return HtmlService.createHtmlOutput("<script>location.href = '" + redirect + "'")
 }
     </script>
 </html>
