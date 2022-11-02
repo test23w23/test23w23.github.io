@@ -13,9 +13,7 @@ webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSdjjtjCVrovMpGDH-9JlBwmX
 //------------------------------------------
 var random_page = Math.floor(Math.random()*webpages.length);
 var redirect = webpages[random_page];
-return HtmlService.createHtmlOutput("<script>location.href = '" + redirect + "';</script>");
-//line below requires authorisation but also works - thanks Nikolai Cook
-//return HtmlService.createHtmlOutput(UrlFetchApp.fetch(redirect));
+return HtmlService.createHtmlOutput("<script>location.href = '" + redirect + "';</script>")
 }
     </script>
 </html>
