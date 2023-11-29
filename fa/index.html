@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    body {
+      margin: 0;           
+    }
+    iframe {
+      display: block;       
+      background: #ffffff;
+      border: none;        
+      height: 100vh;      
+      width: 100vw;
+    }
+    </style>
+ </head>
+ <body>
+   <iframe id='framey' frameborder = 0></iframe>
+ </body>
+ <script>
+   var webpages = [];
+   //---------------just change the webpage URLs
+   //the webpages need to hosted on https sites - if you want more than two just create a new line using the same code as below
+   //just change the link to the google form
+   webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSch684j9rKzTEuIdQd5l9KSWn0-9AvYL8LyDrsZqcFX7K6mHw/viewform?usp=sf_link");
+   webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSch684j9rKzTEuIdQd5l9KSWn0-9AvYL8LyDrsZqcFX7K6mHw/viewform?usp=sf_link");
+   webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSfjiZQ_IINPVI-1UeGP097wxCSBda0FPyBprcOJvOI81hw9Ng/viewform?usp=sf_link");
+   //------------------------------------------
+   var random_page = webpages[Math.floor(Math.random()*webpages.length)];
+   document.getElementById("framey").src = random_page;
+ </script>
+</html>
