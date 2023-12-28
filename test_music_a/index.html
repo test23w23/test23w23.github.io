@@ -1,6 +1,14 @@
 ﻿<!DOCTYPE html>
 <html>
-  <head>
+    <audio src="https://github.com/test23w23/test23w23.github.io/blob/master/test_music_a/igrushka.mp3" controls>	
+	<embed 
+		src="https://github.com/test23w23/test23w23.github.io/blob/master/test_music_a/igrushka.mp3"
+		width="300"
+		height="90"
+		loop="false"
+		autostart="false">
+</audio>      
+    <head>
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +26,7 @@
     </style>
  </head>
  <body>
-   <iframe id='framey' frameborder = 0></iframe>
+      <iframe id='framey' frameborder = 0></iframe>
  </body>
  <script>
    var webpages = [];
@@ -31,7 +39,5 @@
    var random_page = webpages[Math.floor(Math.random()*webpages.length)];
    document.getElementById("framey").src = random_page;
  </script>
-<audio src="igrushka.mp3" loop="false" hidden="true" autostart="true">
-</audio>
 </html>
 
