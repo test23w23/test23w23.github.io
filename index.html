@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📌 Доска презентаций</title>
+    <title>Доска презентаций</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { 
@@ -16,15 +16,15 @@
             background: white; border: 3px dashed #ccc; border-radius: 15px; 
             padding: 40px; text-align: center; cursor: pointer; margin-bottom: 30px; 
         }
-        .upload-zone.drag { border-color: #ff6b6b; background: #ffeaea; }
+        .upload-zone.drag { border-color: #ff6b6b; background: #fff5f5; }
         .board { 
             background: white; border-radius: 15px; padding: 30px; 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-            gap: 20px; 
+            gap: 20px; min-height: 400px; 
         }
         .file-item { 
-            border: 2px solid #eee; border-radius: 10px; padding: 20px; 
-            text-align: center; cursor: pointer;
+            border: 2px solid #eee; border-radius: 10px; padding: 15px; 
+            text-align: center; cursor: pointer; 
         }
         .file-item:hover { border-color: #ff6b6b; transform: translateY(-3px); }
         .file-thumb { font-size: 3em; margin-bottom: 10px; }
@@ -34,10 +34,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>📌 Доска презентаций</h1>
+        <h1>📌 Доска для презентаций</h1>
         <div class="count" id="count">Файлов: 0</div>
         
-        <!-- 🔥 НАСТРОЙКА GitHub -->
+        <!-- 🔥 НАСТРОЙТЕ ТУТ 🔥 -->
         <script>
             GITHUB = {
                 owner: "ea.troitskaya@mail.ru",
@@ -46,59 +46,51 @@
             };
         </script>
         
-        <div class="upload-zone" id="upload">
+        <div class="upload-zone" id="dropzone">
             <p>📁 Перетащите PDF, PPT сюда или кликните</p>
-            <input type="file" id="file" multiple accept=".pdf,.ppt,.pptx" style="display:none">
+            <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx" style="display:none">
         </div>
         <div class="board" id="board"></div>
     </div>
 
     <script>
-        // ПЕРЕМЕННЫЕ
-        let files = [];
-        let rendering = false;
-        
-        // ЭЛЕМЕНТЫ
-        const upload = document.getElementById('upload');
-        const fileInput = document.getElementById('file');
+        // Глобальные переменные
+        let filesList = JSON.parse(localStorage.getItem('files')) || [];
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
         const board = document.getElementById('board');
         const count = document.getElementById('count');
 
         // 🔥 Drag & Drop - ПРОСТОЙ
-        upload.addEventListener('dragover', e => {
+        dropzone.ondragover = dropzone.ondragenter = e => {
             e.preventDefault();
-            upload.classList.add('drag');
-        });
+            dropzone.classList.add('drag');
+        };
         
-        upload.addEventListener('dragleave', e => {
+        dropzone.ondragleave = dropzone.ondrop = e => {
             e.preventDefault();
-            upload.classList.remove('drag');
-        });
-        
-        upload.addEventListener('drop', e => {
-            e.preventDefault();
-            upload.classList.remove('drag');
-            uploadFiles(e.dataTransfer.files);
-        });
-        
-        upload.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', e => {
-            uploadFiles(e.target.files);
-            e.target.value = '';
-        });
+            dropzone.classList.remove('drag');
+            if (e.type === 'drop') uploadFiles(e.dataTransfer.files);
+        };
 
-        // 🔥 Загрузка (БЕЗ localStorage пока)
+        // 🔥 Клик
+        dropzone.onclick = () => fileInput.click();
+        fileInput.onchange = e => uploadFiles(e.target.files);
+
+        // 🔥 Загрузка БЕЗ РЕКУРСИИ
         async function uploadFiles(fileList) {
-            const filesToUpload = Array.from(fileList).filter(f => {
-                return /\.(pdf|ppt|pptx)$/i.test(f.name) && f.size < 20*1024*1024;
-            });
+            const files = Array.from(fileList);
+            for (let file of files) {
+                if (file.size > 20*1024*1024 || !/\.(pdf|ppt|pptx)$/i.test(file.name)) {
+                    alert('Только PDF/PPT до 20МБ');
+                    continue;
+                }
 
-            for (let file of filesToUpload) {
                 try {
-                    showProgress(`Загрузка ${file.name}`);
                     const url = await uploadGitHub(file);
-                    files.unshift({name: file.name, size: file.size, url, date: Date.now()});
-                    render();
+                    filesList.unshift({name: file.name, size: file.size, url, date: Date.now()});
+                    localStorage.setItem('files', JSON.stringify(filesList));
+                    showFiles();
                 } catch(e) {
                     alert('Ошибка: ' + e.message);
                 }
@@ -111,81 +103,51 @@
             const name = `uploads/${Date.now()}_${file.name.replace(/[^a-z0-9.-]/gi, '_')}`;
             
             const buffer = await file.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            const content = btoa(String.fromCharCode(...new Uint8Array(buffer)));
 
-            const res = await fetch(
-                `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${name}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${config.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Добавлен файл',
-                        content: base64
-                    })
-                }
-            );
+            const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${name}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Добавлен ${file.name}`,
+                    content: content
+                })
+            });
 
-            if (!res.ok) throw new Error('GitHub API failed');
+            if (!res.ok) throw new Error('GitHub ошибка');
             return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/main/${name}`;
         }
 
-        // 🔥 РЕНДЕР БЕЗ РЕКУРСИИ
-        function render() {
-            if (rendering) return; // ЗАЩИТА
-            rendering = true;
-            
+        // 🔥 ОТОБРАЖЕНИЕ - БЕЗ СОБЫТИЙ В ЦИКЛЕ
+        function showFiles() {
             board.innerHTML = '';
-            files.slice(0, 50).reverse().forEach(file => { // ЛИМИТ 50
+            count.textContent = `Файлов: ${filesList.length}`;
+            
+            for (let i = filesList.length - 1; i >= 0; i--) {
+                const f = filesList[i];
                 const div = document.createElement('div');
                 div.className = 'file-item';
                 div.innerHTML = `
-                    <div class="file-thumb">${getIcon(file.name)}</div>
-                    <div class="file-name">${file.name}</div>
-                    <div>${formatSize(file.size)}</div>
+                    <div class="file-thumb">${icon(f.name)}</div>
+                    <div class="file-name">${f.name}</div>
+                    <div>${(f.size/1024/1024).toFixed(1)} МБ</div>
                 `;
-                div.onclick = () => window.open(file.url, '_blank');
+                div.onclick = () => window.open(f.url, '_blank');
                 board.appendChild(div);
-            });
-            
-            count.textContent = `Файлов: ${files.length}`;
-            rendering = false;
-        }
-
-        function getIcon(name) {
-            const ext = name.split('.').pop().toLowerCase();
-            return {pdf: '📄', ppt: '📊', pptx: '📊'}[ext] || '📎';
-        }
-
-        function formatSize(bytes) {
-            if (bytes < 1024) return bytes + 'B';
-            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
-            return (bytes/1024/1024).toFixed(1) + 'MB';
-        }
-
-        function showProgress(text) {
-            let prog = document.getElementById('progress');
-            if (!prog) {
-                prog = document.createElement('div');
-                prog.id = 'progress';
-                prog.style.cssText = `
-                    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-                    background:rgba(0,0,0,0.9);color:white;padding:20px;border-radius:10px;z-index:9999;
-                `;
-                document.body.appendChild(prog);
             }
-            prog.textContent = text;
+        }
+
+        function icon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            return ext === 'pdf' ? '📄' : ext.includes('ppt') ? '📊' : '📎';
         }
 
         // 🔥 СТАРТ
-        render();
+        showFiles();
     </script>
 </body>
 </html>
-
-
-
-
 
