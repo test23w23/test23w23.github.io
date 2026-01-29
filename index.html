@@ -7,66 +7,39 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; padding: 20px; 
-        }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { 
-            text-align: center; color: white; margin-bottom: 30px; 
-            font-size: 2.5em; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
+        h1 { text-align: center; color: white; margin-bottom: 30px; font-size: 2.5em; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
         .upload-zone { 
-            background: white; border: 3px dashed #a3a3a3; border-radius: 15px; 
-            padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s ease; 
-            margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: white; border: 3px dashed #a3a3a3; border-radius: 15px; padding: 40px; 
+            text-align: center; cursor: pointer; transition: all 0.3s ease; margin-bottom: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .upload-zone:hover, .upload-zone.dragover { 
-            border-color: #ff6b6b !important; background: #fff5f5; transform: scale(1.02);
-        }
+        .upload-zone:hover, .upload-zone.drag-active { border-color: #ff6b6b !important; background: #fff5f5; transform: scale(1.02); }
         .upload-zone p { font-size: 1.3em; color: #666; margin: 10px 0; }
         .supported { font-size: 1em; color: #ff6b6b; font-weight: 500; }
         input[type="file"] { display: none; }
-        .board { 
-            background: white; border-radius: 15px; padding: 30px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 25px; min-height: 500px; 
-        }
-        .file-item { 
-            border: 2px solid #f0f0f0; border-radius: 15px; padding: 20px; 
-            text-align: center; transition: all 0.3s ease; cursor: pointer;
-            position: relative; overflow: hidden; background: #fafafa;
-        }
-        .file-item:hover { 
-            transform: translateY(-8px); box-shadow: 0 15px 35px rgba(255,107,107,0.3); 
-            border-color: #ff6b6b;
-        }
-        .file-thumb { 
-            width: 100%; height: 160px; border-radius: 12px; margin-bottom: 15px; 
-            background: linear-gradient(45deg, #f0f0f0, #e0e0e0); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 3.5em; color: #999; transition: all 0.3s ease;
-        }
+        .board { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
+                 display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; min-height: 500px; }
+        .file-item { border: 2px solid #f0f0f0; border-radius: 15px; padding: 20px; text-align: center; 
+                     transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; background: #fafafa; }
+        .file-item:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(255,107,107,0.3); border-color: #ff6b6b; }
+        .file-thumb { width: 100%; height: 160px; border-radius: 12px; margin-bottom: 15px; 
+                      background: linear-gradient(45deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; 
+                      justify-content: center; font-size: 3.5em; color: #999; transition: all 0.3s ease; }
         .file-item:hover .file-thumb { background: linear-gradient(45deg, #ff6b6b, #ff8e8e); color: white; }
         .file-name { font-weight: 600; margin-bottom: 8px; word-break: break-word; font-size: 1.1em; color: #333; }
         .file-size { color: #ff6b6b; font-weight: 500; font-size: 0.95em; margin-bottom: 5px; }
         .file-date { color: #888; font-size: 0.85em; }
-        .count { 
-            position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.95); 
-            padding: 15px 25px; border-radius: 30px; font-weight: 600; color: #667eea; 
-            font-size: 1.1em; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        .progress { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); 
-            background: rgba(0,0,0,0.9); color: white; padding: 25px 40px; 
-            border-radius: 15px; z-index: 9999; font-size: 1.2em; 
-            backdrop-filter: blur(10px);
-        }
+        .count { position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.95); 
+                 padding: 15px 25px; border-radius: 30px; font-weight: 600; color: #667eea; 
+                 font-size: 1.1em; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .progress { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); 
+                    background: rgba(0,0,0,0.9); color: white; padding: 25px 40px; border-radius: 15px; 
+                    z-index: 9999; font-size: 1.2em; backdrop-filter: blur(10px); text-align: center; }
         @media (max-width: 768px) { 
             .board { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 20px; } 
-            h1 { font-size: 2em; margin-bottom: 20px; } 
-            .upload-zone { padding: 30px 20px; }
+            h1 { font-size: 2em; margin-bottom: 20px; } .upload-zone { padding: 30px 20px; }
         }
     </style>
 </head>
@@ -75,12 +48,12 @@
         <h1>📌 Доска для презентаций</h1>
         <div class="count" id="fileCount">Файлов: 0</div>
         
-        <!-- 🔥 НАСТРОЙТЕ GitHub ЗДЕСЬ (замените значения) 🔥 -->
+        <!-- 🔥 НАСТРОЙТЕ GitHub ЗДЕСЬ 🔥 -->
         <script>
             window.GITHUB_CONFIG = {
-                owner: "ea.troitskaya@mail.ru",
-                repo: "test23w23.github.io", 
-                token: "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"
+                owner: "ea.troitskaya@mail.ru",    // ← ЗАМЕНИТЕ
+                repo: "test23w23.github.io",      // ← ЗАМЕНИТЕ  
+                token: "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"  // ← ЗАМЕНИТЕ
             };
         </script>
         
@@ -90,93 +63,66 @@
             <p class="supported">✅ До 20 МБ • Поддержка: PDF, PPT, PPTX</p>
             <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx">
         </div>
-        
         <div class="board" id="board"></div>
     </div>
 
     <script>
-        console.log('🚀 Инициализация доски...');
-        
         const uploadZone = document.getElementById('uploadZone');
         const fileInput = document.getElementById('fileInput');
         const board = document.getElementById('board');
         const fileCountEl = document.getElementById('fileCount');
         
         let files = JSON.parse(localStorage.getItem('padletFiles')) || [];
-        let isDragOver = false; // 🔥 ФЛАГ ПРОТИВ РЕКУРСИИ
+        let dragCounter = 0; // 🔥 СЧЁТЧИК ПРОТИВ РЕКУРСИИ
 
-        // ✅ ИСПРАВЛЕННЫЙ Drag & Drop БЕЗ РЕКУРСИИ
-        uploadZone.addEventListener('dragenter', handleDragEnter);
-        uploadZone.addEventListener('dragover', handleDragOver);
-        uploadZone.addEventListener('dragleave', handleDragLeave);
-        uploadZone.addEventListener('drop', handleDrop);
+        // 🔥 Drag & Drop БЕЗ РЕКУРСИИ
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, preventDefaults, false);
+        });
 
-        function handleDragEnter(e) {
+        function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (!isDragOver) {
-                isDragOver = true;
-                uploadZone.classList.add('dragover');
-            }
         }
 
-        function handleDragOver(e) {
-            e.preventDefault(); // 🔥 ОБЯЗАТЕЛЬНО!
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = 'copy';
-        }
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => dragCounter++, false);
+        });
 
-        function handleDragLeave(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            // 🔥 ПРОВЕРКА: вышли ли ЗНАЧИТ ЕСТЬ ли за пределами зоны
-            if (e.currentTarget.contains(e.relatedTarget)) return;
-            if (isDragOver) {
-                isDragOver = false;
-                uploadZone.classList.remove('dragover');
-            }
-        }
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => {
+                dragCounter--;
+                if (dragCounter === 0) {
+                    uploadZone.classList.remove('drag-active');
+                }
+            }, false);
+        });
 
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            isDragOver = false;
-            uploadZone.classList.remove('dragover');
-            
-            console.log('✅ DROP! Файлов:', e.dataTransfer.files.length);
-            
-            if (e.dataTransfer.files.length > 0) {
-                handleFiles(e.dataTransfer.files);
-            }
-        }
+        uploadZone.addEventListener('dragenter', () => {
+            dragCounter++;
+            uploadZone.classList.add('drag-active');
+        });
 
-        function checkConfig() {
-            const config = window.GITHUB_CONFIG;
-            const issues = [];
-            if (!config.owner || config.owner === 'ВАШ_GITHUB_LOGIN') issues.push('owner');
-            if (!config.repo || config.repo === 'ВАШ_РЕПОЗИТОРИЙ') issues.push('repo'); 
-            if (!config.token || config.token.includes('XXXX')) issues.push('token');
-            
-            if (issues.length > 0) {
-                throw new Error(`❌ Настройте GitHub: ${issues.join(', ')}`);
-            }
-            return true;
-        }
+        uploadZone.addEventListener('drop', (e) => {
+            dragCounter = 0;
+            uploadZone.classList.remove('drag-active');
+            handleFiles(e.dataTransfer.files);
+        });
 
+        // 🔥 GitHub загрузка
         async function uploadToGitHub(file) {
             const config = window.GITHUB_CONFIG;
+            if (!config.owner || config.owner === 'ВАШ_GITHUB_LOGIN') {
+                throw new Error('❌ Настройте GitHub в window.GITHUB_CONFIG');
+            }
+
             const timestamp = Date.now();
             const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
             const fileName = `uploads/${timestamp}_${safeName}`;
             
-            const progress = document.createElement('div');
-            progress.className = 'progress';
-            progress.innerHTML = `📤 <strong>${file.name}</strong><br>Загружаем в GitHub...`;
-            document.body.appendChild(progress);
+            showProgress(`📤 Загружаем "${file.name}"...`);
 
             try {
-                console.log('📤 Загрузка:', fileName);
                 const arrayBuffer = await file.arrayBuffer();
                 const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
@@ -190,27 +136,58 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            message: `Добавить ${file.name} (${formatSize(file.size)})`,
+                            message: `Добавить ${file.name}`,
                             content: base64Content
                         })
                     }
                 );
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.error('GitHub error:', errorData);
-                    throw new Error(`GitHub ${response.status}: ${errorData.message || 'Ошибка сервера'}`);
-                }
-
-                document.body.removeChild(progress);
-                console.log('✅ Успешно загружено:', fileName);
+                hideProgress();
+                
+                if (!response.ok) throw new Error(`GitHub: ${response.status}`);
                 return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/main/${fileName}`;
                 
             } catch (error) {
-                document.body.removeChild(progress);
-                console.error('❌ Ошибка загрузки:', error);
-                throw error;
+                hideProgress();
+                throw new Error(error.message);
             }
+        }
+
+        function showProgress(text) {
+            let progress = document.getElementById('progress');
+            if (!progress) {
+                progress = document.createElement('div');
+                progress.id = 'progress';
+                progress.className = 'progress';
+                document.body.appendChild(progress);
+            }
+            progress.textContent = text;
+        }
+
+        function hideProgress() {
+            const progress = document.getElementById('progress');
+            if (progress) progress.remove();
+        }
+
+        // 🔥 ОТОБРАЖЕНИЕ ФАЙЛОВ БЕЗ РЕКУРСИИ
+        function renderBoard() {
+            board.innerHTML = '';
+            [...files].reverse().forEach((fileData, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-thumb">${getFileIcon(fileData.name)}</div>
+                    <div class="file-name">${fileData.name}</div>
+                    <div class="file-size">${formatSize(fileData.size)}</div>
+                    <div class="file-date">${new Date(fileData.date).toLocaleDateString('ru-RU')}</div>
+                `;
+                // 🔥 КЛИК БЕЗ saveFiles()
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.open(fileData.url, '_blank');
+                });
+                board.appendChild(item);
+            });
         }
 
         function saveFiles() {
@@ -223,29 +200,10 @@
             fileCountEl.textContent = `Файлов: ${files.length}`;
         }
 
-        function renderBoard() {
-            board.innerHTML = '';
-            files.slice().reverse().forEach((fileData) => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.innerHTML = `
-                    <div class="file-thumb">${getFileIcon(fileData.name)}</div>
-                    <div class="file-name">${fileData.name}</div>
-                    <div class="file-size">${formatSize(fileData.size)}</div>
-                    <div class="file-date">${new Date(fileData.date).toLocaleDateString('ru-RU')}</div>
-                `;
-                item.title = 'Кликните для открытия/скачивания';
-                item.addEventListener('click', () => {
-                    console.log('Открываем:', fileData.url);
-                    window.open(fileData.url, '_blank');
-                });
-                board.appendChild(item);
-            });
-        }
-
         function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
-            return { pdf: '📄', ppt: '📊', pptx: '📊' }[ext] || '📎';
+            const icons = { pdf: '📄', ppt: '📊', pptx: '📊', default: '📎' };
+            return icons[ext] || icons.default;
         }
 
         function formatSize(bytes) {
@@ -255,21 +213,17 @@
         }
 
         async function handleFiles(fileList) {
-            console.log('🔄 Обработка файлов:', fileList.length);
-            
-            const newFiles = Array.from(fileList).filter(file => {
+            const validFiles = Array.from(fileList).filter(file => {
                 if (file.size > 20 * 1024 * 1024) { 
-                    alert(`❌ "${file.name}" слишком большой (макс. 20 МБ)`); 
-                    return false; 
+                    alert(`❌ "${file.name}" > 20 МБ`); return false; 
                 }
                 if (!/\.(pdf|ppt|pptx)$/i.test(file.name)) { 
-                    alert(`❌ Только PDF, PPT, PPTX: "${file.name}"`); 
-                    return false; 
+                    alert(`❌ Только PDF/PPT/PPTX: ${file.name}`); return false; 
                 }
                 return true;
             });
 
-            for (const file of newFiles) {
+            for (const file of validFiles) {
                 try {
                     const url = await uploadToGitHub(file);
                     files.unshift({ name: file.name, size: file.size, url, date: Date.now() });
@@ -280,26 +234,19 @@
             }
         }
 
-        // Клик загрузки
-        uploadZone.addEventListener('click', (e) => {
-            if (!uploadZone.classList.contains('dragover')) {
-                fileInput.click();
-            }
+        // Клик по зоне
+        uploadZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            e.target.value = '';
         });
 
-        fileInput.addEventListener('change', (e) => { 
-            if (fileInput.files.length > 0) {
-                handleFiles(fileInput.files);
-            }
-            fileInput.value = '';
-        });
-
-        // Инициализация
+        // 🔥 СТАРТ БЕЗ РЕКУРСИИ
         renderBoard();
         updateCount();
-        console.log('✅ Доска готова! Проверьте F12 → Console');
     </script>
 </body>
 </html>
+
 
 
