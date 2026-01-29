@@ -15,23 +15,8 @@
         .upload-zone { 
             background: white; border: 3px dashed #ccc; border-radius: 15px; 
             padding: 40px; text-align: center; cursor: pointer; margin-bottom: 30px; 
-            transition: all 0.3s;
         }
-        .upload-zone:hover, .upload-zone.drag { 
-            border-color: #ff6b6b; background: #ffeaea; transform: scale(1.02); 
-        }
-        .upload-zone p { font-size: 1.3em; color: #666; margin: 10px 0; }
-        .controls { 
-            background: white; border-radius: 15px; padding: 20px; margin-bottom: 30px; 
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .btn { 
-            background: #ff6b6b; color: white; border: none; padding: 12px 30px; 
-            border-radius: 25px; font-size: 1.1em; cursor: pointer; margin: 0 10px;
-            transition: all 0.3s;
-        }
-        .btn:hover { background: #ff5252; transform: translateY(-2px); }
-        input[type="file"] { display: none; }
+        .upload-zone.drag { border-color: #ff6b6b; background: #ffeaea; }
         .board { 
             background: white; border-radius: 15px; padding: 30px; 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
@@ -39,19 +24,12 @@
         }
         .file-item { 
             border: 2px solid #eee; border-radius: 10px; padding: 20px; 
-            text-align: center; cursor: pointer; transition: all 0.3s;
+            text-align: center; cursor: pointer;
         }
-        .file-item:hover { 
-            border-color: #ff6b6b; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .file-thumb { font-size: 3em; margin-bottom: 15px; }
-        .file-name { font-weight: bold; margin-bottom: 5px; font-size: 1.1em; }
-        .file-size { color: #888; font-size: 0.9em; }
-        .count { 
-            position: fixed; top: 20px; right: 20px; 
-            background: rgba(255,255,255,0.9); padding: 15px 25px; border-radius: 25px; 
-            font-weight: bold; color: #333;
-        }
+        .file-item:hover { border-color: #ff6b6b; transform: translateY(-3px); }
+        .file-thumb { font-size: 3em; margin-bottom: 10px; }
+        .file-name { font-weight: bold; margin-bottom: 5px; }
+        .count { position: fixed; top: 20px; right: 20px; background: white; padding: 10px 20px; border-radius: 20px; }
     </style>
 </head>
 <body>
@@ -59,117 +37,121 @@
         <h1>📌 Доска презентаций</h1>
         <div class="count" id="count">Файлов: 0</div>
         
-        <div class="controls">
-            <button class="btn" onclick="downloadAll()">📦 Скачать все ZIP</button>
-            <button class="btn" onclick="clearAll()">🗑️ Очистить доску</button>
-            <label class="btn" for="restoreInput">📁 Восстановить</label>
-            <input type="file" id="restoreInput" accept=".json" style="display:none">
-        </div>
+        <!-- 🔥 НАСТРОЙКА GitHub -->
+        <script>
+            GITHUB = {
+                owner: "ea.troitskaya@mail.ru",
+                repo: "test23w23.github.io", 
+                token: "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"
+            };
+        </script>
         
-        <div class="upload-zone" id="uploadZone">
-            <p>📁 Перетащите PDF, PPT сюда</p>
-            <p style="font-size: 1.1em; color: #333;">или кликните для выбора (до 20 МБ)</p>
-            <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx">
+        <div class="upload-zone" id="upload">
+            <p>📁 Перетащите PDF, PPT сюда или кликните</p>
+            <input type="file" id="file" multiple accept=".pdf,.ppt,.pptx" style="display:none">
         </div>
-        
         <div class="board" id="board"></div>
     </div>
 
     <script>
-        const zone = document.getElementById('uploadZone');
-        const input = document.getElementById('fileInput');
-        const restoreInput = document.getElementById('restoreInput');
+        // ПЕРЕМЕННЫЕ
+        let files = [];
+        let rendering = false;
+        
+        // ЭЛЕМЕНТЫ
+        const upload = document.getElementById('upload');
+        const fileInput = document.getElementById('file');
         const board = document.getElementById('board');
         const count = document.getElementById('count');
-        
-        let files = [];
 
-        // Загрузка из localStorage
-        function loadFiles() {
-            try {
-                const saved = localStorage.getItem('padletFiles');
-                if (saved) {
-                    files = JSON.parse(saved).map(f => ({
-                        ...f,
-                        url: f.url // URL.createObjectURL не сохраняется
-                    }));
-                }
-            } catch(e) {
-                console.log('Не удалось загрузить файлы');
-            }
-            render();
-        }
-
-        // Drag & Drop
-        zone.addEventListener('dragover', e => {
+        // 🔥 Drag & Drop - ПРОСТОЙ
+        upload.addEventListener('dragover', e => {
             e.preventDefault();
-            zone.classList.add('drag');
+            upload.classList.add('drag');
         });
         
-        zone.addEventListener('dragleave', e => {
+        upload.addEventListener('dragleave', e => {
             e.preventDefault();
-            zone.classList.remove('drag');
+            upload.classList.remove('drag');
         });
         
-        zone.addEventListener('drop', e => {
+        upload.addEventListener('drop', e => {
             e.preventDefault();
-            zone.classList.remove('drag');
-            addFiles(e.dataTransfer.files);
+            upload.classList.remove('drag');
+            uploadFiles(e.dataTransfer.files);
         });
         
-        zone.addEventListener('click', () => input.click());
-        
-        input.addEventListener('change', e => {
-            addFiles(e.target.files);
-            input.value = '';
+        upload.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            uploadFiles(e.target.files);
+            e.target.value = '';
         });
 
-        // Добавление файлов
-        function addFiles(fileList) {
-            for (let file of Array.from(fileList)) {
-                if (!/\.(pdf|ppt|pptx)$/i.test(file.name)) {
-                    alert('Только PDF, PPT, PPTX');
-                    continue;
-                }
-                if (file.size > 20*1024*1024) {
-                    alert(file.name + ' > 20MB');
-                    continue;
-                }
-                
-                const fileURL = URL.createObjectURL(file);
-                files.unshift({
-                    name: file.name,
-                    size: file.size,
-                    url: fileURL,
-                    date: Date.now()
-                });
-                
-                if (files.length > 50) files = files.slice(0, 50);
-                saveFiles();
-            }
-        }
-
-        // Сохранение
-        function saveFiles() {
-            localStorage.setItem('padletFiles', JSON.stringify(files));
-            render();
-        }
-
-        // Отрисовка
-        function render() {
-            board.innerHTML = '';
-            files.slice(0, 30).forEach(fileData => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.innerHTML = `
-                    <div class="file-thumb">${getIcon(fileData.name)}</div>
-                    <div class="file-name">${fileData.name}</div>
-                    <div class="file-size">${formatSize(fileData.size)}</div>
-                `;
-                item.onclick = () => window.open(fileData.url, '_blank');
-                board.appendChild(item);
+        // 🔥 Загрузка (БЕЗ localStorage пока)
+        async function uploadFiles(fileList) {
+            const filesToUpload = Array.from(fileList).filter(f => {
+                return /\.(pdf|ppt|pptx)$/i.test(f.name) && f.size < 20*1024*1024;
             });
+
+            for (let file of filesToUpload) {
+                try {
+                    showProgress(`Загрузка ${file.name}`);
+                    const url = await uploadGitHub(file);
+                    files.unshift({name: file.name, size: file.size, url, date: Date.now()});
+                    render();
+                } catch(e) {
+                    alert('Ошибка: ' + e.message);
+                }
+            }
+        }
+
+        // 🔥 GitHub API
+        async function uploadGitHub(file) {
+            const config = GITHUB;
+            const name = `uploads/${Date.now()}_${file.name.replace(/[^a-z0-9.-]/gi, '_')}`;
+            
+            const buffer = await file.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
+            const res = await fetch(
+                `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${name}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Добавлен файл',
+                        content: base64
+                    })
+                }
+            );
+
+            if (!res.ok) throw new Error('GitHub API failed');
+            return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/main/${name}`;
+        }
+
+        // 🔥 РЕНДЕР БЕЗ РЕКУРСИИ
+        function render() {
+            if (rendering) return; // ЗАЩИТА
+            rendering = true;
+            
+            board.innerHTML = '';
+            files.slice(0, 50).reverse().forEach(file => { // ЛИМИТ 50
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <div class="file-thumb">${getIcon(file.name)}</div>
+                    <div class="file-name">${file.name}</div>
+                    <div>${formatSize(file.size)}</div>
+                `;
+                div.onclick = () => window.open(file.url, '_blank');
+                board.appendChild(div);
+            });
+            
             count.textContent = `Файлов: ${files.length}`;
+            rendering = false;
         }
 
         function getIcon(name) {
@@ -178,65 +160,27 @@
         }
 
         function formatSize(bytes) {
-            if (bytes < 1024) return bytes + ' Б';
-            if (bytes < 1024*1024) return Math.round(bytes/1024) + ' КБ';
-            return (bytes/1024/1024).toFixed(1) + ' МБ';
+            if (bytes < 1024) return bytes + 'B';
+            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
+            return (bytes/1024/1024).toFixed(1) + 'MB';
         }
 
-        // 🔥 СКАЧАТЬ ВСЕ ФАЙЛЫ ZIP
-        function downloadAll() {
-            if (files.length === 0) {
-                alert('Нет файлов для скачивания');
-                return;
+        function showProgress(text) {
+            let prog = document.getElementById('progress');
+            if (!prog) {
+                prog = document.createElement('div');
+                prog.id = 'progress';
+                prog.style.cssText = `
+                    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+                    background:rgba(0,0,0,0.9);color:white;padding:20px;border-radius:10px;z-index:9999;
+                `;
+                document.body.appendChild(prog);
             }
-            
-            // Создаем ссылку для скачивания JSON со списком файлов
-            const dataStr = JSON.stringify(files.map(f => ({
-                name: f.name,
-                size: f.size,
-                date: new Date(f.date).toLocaleString('ru-RU')
-            })), null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `доска-презентаций-${new Date().toISOString().slice(0,10)}.json`;
-            link.click();
-            
-            alert(`📦 Скачан файл со списком ${files.length} файлов!\n💾 Файлы сохранены в браузере - дома откройте ту же страницу!`);
+            prog.textContent = text;
         }
 
-        // 🔥 ОЧИСТИТЬ
-        function clearAll() {
-            if (confirm('Очистить все файлы?')) {
-                files = [];
-                localStorage.removeItem('padletFiles');
-                render();
-            }
-        }
-
-        // 🔥 ВОССТАНОВИТЬ
-        restoreInput.addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = e => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    files = data;
-                    saveFiles();
-                    alert('Файлы восстановлены!');
-                } catch(err) {
-                    alert('Ошибка файла');
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        // ⭐ СТАРТ
-        loadFiles();
+        // 🔥 СТАРТ
+        render();
     </script>
 </body>
 </html>
