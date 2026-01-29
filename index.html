@@ -7,39 +7,64 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; color: white; margin-bottom: 30px; font-size: 2.5em; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-        .upload-zone { 
-            background: white; border: 3px dashed #a3a3a3; border-radius: 15px; padding: 40px; 
-            text-align: center; cursor: pointer; transition: all 0.3s ease; margin-bottom: 30px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; padding: 20px; 
         }
-        .upload-zone:hover, .upload-zone.drag-active { border-color: #ff6b6b !important; background: #fff5f5; transform: scale(1.02); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { 
+            text-align: center; color: white; margin-bottom: 30px; 
+            font-size: 2.5em; text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .upload-zone { 
+            background: white; border: 3px dashed #a3a3a3; border-radius: 15px; 
+            padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s ease; 
+            margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .upload-zone.drag-active { 
+            border-color: #ff6b6b !important; background: #fff5f5; transform: scale(1.02);
+        }
         .upload-zone p { font-size: 1.3em; color: #666; margin: 10px 0; }
         .supported { font-size: 1em; color: #ff6b6b; font-weight: 500; }
         input[type="file"] { display: none; }
-        .board { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
-                 display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; min-height: 500px; }
-        .file-item { border: 2px solid #f0f0f0; border-radius: 15px; padding: 20px; text-align: center; 
-                     transition: all 0.3s ease; cursor: pointer; position: relative; overflow: hidden; background: #fafafa; }
-        .file-item:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(255,107,107,0.3); border-color: #ff6b6b; }
-        .file-thumb { width: 100%; height: 160px; border-radius: 12px; margin-bottom: 15px; 
-                      background: linear-gradient(45deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; 
-                      justify-content: center; font-size: 3.5em; color: #999; transition: all 0.3s ease; }
+        .board { 
+            background: white; border-radius: 15px; padding: 30px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; min-height: 500px; 
+        }
+        .file-item { 
+            border: 2px solid #f0f0f0; border-radius: 15px; padding: 20px; 
+            text-align: center; transition: all 0.3s ease; cursor: pointer;
+            background: #fafafa;
+        }
+        .file-item:hover { 
+            transform: translateY(-8px); box-shadow: 0 15px 35px rgba(255,107,107,0.3); 
+            border-color: #ff6b6b;
+        }
+        .file-thumb { 
+            width: 100%; height: 160px; border-radius: 12px; margin-bottom: 15px; 
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0); display: flex; 
+            align-items: center; justify-content: center; font-size: 3.5em; color: #999; 
+        }
         .file-item:hover .file-thumb { background: linear-gradient(45deg, #ff6b6b, #ff8e8e); color: white; }
         .file-name { font-weight: 600; margin-bottom: 8px; word-break: break-word; font-size: 1.1em; color: #333; }
         .file-size { color: #ff6b6b; font-weight: 500; font-size: 0.95em; margin-bottom: 5px; }
         .file-date { color: #888; font-size: 0.85em; }
-        .count { position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.95); 
-                 padding: 15px 25px; border-radius: 30px; font-weight: 600; color: #667eea; 
-                 font-size: 1.1em; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-        .progress { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); 
-                    background: rgba(0,0,0,0.9); color: white; padding: 25px 40px; border-radius: 15px; 
-                    z-index: 9999; font-size: 1.2em; backdrop-filter: blur(10px); text-align: center; }
+        .count { 
+            position: fixed; top: 25px; right: 25px; background: rgba(255,255,255,0.95); 
+            padding: 15px 25px; border-radius: 30px; font-weight: 600; color: #667eea; 
+            font-size: 1.1em; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .progress { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); 
+            background: rgba(0,0,0,0.95); color: white; padding: 30px 50px; 
+            border-radius: 20px; z-index: 10000; font-size: 1.3em; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
         @media (max-width: 768px) { 
             .board { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 20px; } 
-            h1 { font-size: 2em; margin-bottom: 20px; } .upload-zone { padding: 30px 20px; }
+            h1 { font-size: 2em; } .upload-zone { padding: 30px 20px; }
         }
     </style>
 </head>
@@ -48,79 +73,73 @@
         <h1>📌 Доска для презентаций</h1>
         <div class="count" id="fileCount">Файлов: 0</div>
         
-        <!-- 🔥 НАСТРОЙТЕ GitHub ЗДЕСЬ 🔥 -->
+        <!-- 🔥 НАСТРОЙКА GitHub (ЗАМЕНИТЕ ЗНАЧЕНИЯ) 🔥 -->
         <script>
             window.GITHUB_CONFIG = {
-                owner: "ea.troitskaya@mail.ru",    // ← ЗАМЕНИТЕ
-                repo: "test23w23.github.io",      // ← ЗАМЕНИТЕ  
-                token: "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"  // ← ЗАМЕНИТЕ
+                owner: "ea.troitskaya@mail.ru",
+                repo: "test23w23.github.io", 
+                token: "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"
             };
         </script>
         
         <div class="upload-zone" id="uploadZone">
             <p>📁 Перетащите PDF, PPT, PPTX сюда</p>
-            <p style="font-size: 1.1em; color: #333; font-weight: 500;">или кликните для выбора файлов</p>
-            <p class="supported">✅ До 20 МБ • Поддержка: PDF, PPT, PPTX</p>
+            <p style="font-size: 1.1em; color: #333; font-weight: 500;">или кликните для выбора</p>
+            <p class="supported">✅ До 20 МБ • PDF, PPT, PPTX</p>
             <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx">
         </div>
+        
         <div class="board" id="board"></div>
     </div>
 
     <script>
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const board = document.getElementById('board');
-        const fileCountEl = document.getElementById('fileCount');
+        // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+        const elements = {
+            uploadZone: document.getElementById('uploadZone'),
+            fileInput: document.getElementById('fileInput'),
+            board: document.getElementById('board'),
+            fileCountEl: document.getElementById('fileCount')
+        };
         
         let files = JSON.parse(localStorage.getItem('padletFiles')) || [];
-        let dragCounter = 0; // 🔥 СЧЁТЧИК ПРОТИВ РЕКУРСИИ
+        let dragCounter = 0;
 
-        // 🔥 Drag & Drop БЕЗ РЕКУРСИИ
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadZone.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadZone.addEventListener(eventName, () => dragCounter++, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadZone.addEventListener(eventName, () => {
+        // 🔥 Drag & Drop - ОДИН обработчик на всё
+        function handleDrag(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (event.type === 'dragenter' || event.type === 'dragover') {
+                dragCounter++;
+                elements.uploadZone.classList.add('drag-active');
+            } else if (event.type === 'dragleave') {
                 dragCounter--;
                 if (dragCounter === 0) {
-                    uploadZone.classList.remove('drag-active');
+                    elements.uploadZone.classList.remove('drag-active');
                 }
-            }, false);
+            } else if (event.type === 'drop') {
+                dragCounter = 0;
+                elements.uploadZone.classList.remove('drag-active');
+                handleFiles(event.dataTransfer.files);
+            }
+        }
+
+        // 🔥 Регистрация событий ОДНИМ вызовом
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(type => {
+            elements.uploadZone.addEventListener(type, handleDrag, false);
         });
 
-        uploadZone.addEventListener('dragenter', () => {
-            dragCounter++;
-            uploadZone.classList.add('drag-active');
-        });
-
-        uploadZone.addEventListener('drop', (e) => {
-            dragCounter = 0;
-            uploadZone.classList.remove('drag-active');
-            handleFiles(e.dataTransfer.files);
-        });
-
-        // 🔥 GitHub загрузка
+        // 🔥 Загрузка в GitHub
         async function uploadToGitHub(file) {
             const config = window.GITHUB_CONFIG;
-            if (!config.owner || config.owner === 'ВАШ_GITHUB_LOGIN') {
-                throw new Error('❌ Настройте GitHub в window.GITHUB_CONFIG');
+            if (config.owner === 'ВАШ_GITHUB_LOGIN') {
+                throw new Error('🚫 Настройте GitHub config в <script> выше!');
             }
 
             const timestamp = Date.now();
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const fileName = `uploads/${timestamp}_${safeName}`;
+            const fileName = `uploads/${timestamp}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
             
-            showProgress(`📤 Загружаем "${file.name}"...`);
+            showProgress(`📤 Загружаем "${file.name}" в GitHub...`);
 
             try {
                 const arrayBuffer = await file.arrayBuffer();
@@ -136,23 +155,23 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            message: `Добавить ${file.name}`,
+                            message: `Добавлен файл ${file.name}`,
                             content: base64Content
                         })
                     }
                 );
 
                 hideProgress();
+                if (!response.ok) throw new Error('GitHub API ошибка');
                 
-                if (!response.ok) throw new Error(`GitHub: ${response.status}`);
                 return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/main/${fileName}`;
-                
             } catch (error) {
                 hideProgress();
-                throw new Error(error.message);
+                throw new Error(`Ошибка загрузки: ${error.message}`);
             }
         }
 
+        // 🔥 UI функции
         function showProgress(text) {
             let progress = document.getElementById('progress');
             if (!progress) {
@@ -169,10 +188,9 @@
             if (progress) progress.remove();
         }
 
-        // 🔥 ОТОБРАЖЕНИЕ ФАЙЛОВ БЕЗ РЕКУРСИИ
         function renderBoard() {
-            board.innerHTML = '';
-            [...files].reverse().forEach((fileData, index) => {
+            elements.board.innerHTML = '';
+            [...files].reverse().forEach(fileData => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
                 item.innerHTML = `
@@ -181,13 +199,13 @@
                     <div class="file-size">${formatSize(fileData.size)}</div>
                     <div class="file-date">${new Date(fileData.date).toLocaleDateString('ru-RU')}</div>
                 `;
-                // 🔥 КЛИК БЕЗ saveFiles()
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    window.open(fileData.url, '_blank');
-                });
-                board.appendChild(item);
+                item.addEventListener('click', () => window.open(fileData.url, '_blank'));
+                elements.board.appendChild(item);
             });
+        }
+
+        function updateCount() {
+            elements.fileCountEl.textContent = `Файлов: ${files.length}`;
         }
 
         function saveFiles() {
@@ -196,35 +214,36 @@
             renderBoard();
         }
 
-        function updateCount() {
-            fileCountEl.textContent = `Файлов: ${files.length}`;
-        }
-
         function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
-            const icons = { pdf: '📄', ppt: '📊', pptx: '📊', default: '📎' };
-            return icons[ext] || icons.default;
+            const icons = { pdf: '📄', ppt: '📊', pptx: '📊' };
+            return icons[ext] || '📎';
         }
 
         function formatSize(bytes) {
             if (bytes < 1024) return bytes + ' Б';
-            if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' КБ';
-            return (bytes/(1024*1024)).toFixed(1) + ' МБ';
+            const kb = bytes / 1024;
+            if (kb < 1024) return kb.toFixed(1) + ' КБ';
+            return (kb / 1024).toFixed(1) + ' МБ';
         }
 
         async function handleFiles(fileList) {
             const validFiles = Array.from(fileList).filter(file => {
-                if (file.size > 20 * 1024 * 1024) { 
-                    alert(`❌ "${file.name}" > 20 МБ`); return false; 
-                }
-                if (!/\.(pdf|ppt|pptx)$/i.test(file.name)) { 
-                    alert(`❌ Только PDF/PPT/PPTX: ${file.name}`); return false; 
-                }
-                return true;
-            });
+                if (file.size > 20 * 1024 * 1024) return false;
+                return /\.(pdf|ppt|pptx)$/i.test(file.name);
+            }).filter((file, index, arr) => arr.indexOf(file) === index); // Убираем дубли
 
             for (const file of validFiles) {
                 try {
+                    if (!/\.(pdf|ppt|pptx)$/i.test(file.name)) {
+                        alert(`❌ Поддерживаются только PDF, PPT, PPTX`);
+                        continue;
+                    }
+                    if (file.size > 20 * 1024 * 1024) {
+                        alert(`❌ ${file.name} > 20 МБ`);
+                        continue;
+                    }
+
                     const url = await uploadToGitHub(file);
                     files.unshift({ name: file.name, size: file.size, url, date: Date.now() });
                     saveFiles();
@@ -234,19 +253,25 @@
             }
         }
 
-        // Клик по зоне
-        uploadZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
+        // КЛИК по зоне
+        elements.uploadZone.addEventListener('click', (e) => {
+            if (!e.target.closest('input')) {
+                elements.fileInput.click();
+            }
+        });
+
+        elements.fileInput.addEventListener('change', (e) => {
             handleFiles(e.target.files);
             e.target.value = '';
         });
 
-        // 🔥 СТАРТ БЕЗ РЕКУРСИИ
+        // 🔥 СТАРТ
         renderBoard();
         updateCount();
     </script>
 </body>
 </html>
+
 
 
 
