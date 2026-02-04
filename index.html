@@ -502,31 +502,57 @@
             }
         }
         
-        // Просмотр в полноэкранном режиме
-        function viewPresentation(url, fileName) {
-            const overlay = document.getElementById('fullscreenOverlay');
-            const frame = document.getElementById('fullscreenFrame');
-            const title = document.getElementById('fullscreenTitle');
-            
-            title.textContent = fileName;
-            
-            // Определяем тип файла
-            const ext = fileName.split('.').pop().toLowerCase();
-            
-            if (ext === 'pdf') {
-                // PDF показываем напрямую
-                frame.src = url;
-            } else if (ext === 'ppt' || ext === 'pptx') {
-                // Для PowerPoint используем Google Docs Viewer
-                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-            } else {
-                // Для остальных файлов
-                frame.src = url;
-            }
-            
-            overlay.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+       // Просмотр в полноэкранном режиме
+function viewPresentation(url, fileName) {
+    const overlay = document.getElementById('fullscreenOverlay');
+    const frame = document.getElementById('fullscreenFrame');
+    const title = document.getElementById('fullscreenTitle');
+    
+    title.textContent = fileName;
+    
+    // Определяем тип файла
+    const ext = fileName.split('.').pop().toLowerCase();
+    
+    if (ext === 'pdf') {
+        // Для PDF используем специальный viewer или прямую ссылку
+        // Вариант 1: Используем Google Docs Viewer
+        frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    } else if (ext === 'ppt' || ext === 'pptx') {
+        // Для PowerPoint используем Google Docs Viewer
+        frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    } else {
+        // Для остальных файлов пробуем открыть напрямую
+        frame.src = url;
+    }
+    
+    // Добавляем обработчик ошибок
+    frame.onload = function() {
+        console.log('Frame loaded successfully');
+    };
+    
+    frame.onerror = function() {
+        console.error('Error loading frame');
+        // Если не загрузилось, показываем альтернативу
+        frame.srcdoc = `
+            <html>
+                <body style="background: white; color: black; padding: 20px;">
+                    <h2>Не удалось открыть файл в браузере</h2>
+                    <p>Файл: ${fileName}</p>
+                    <p>Пожалуйста:</p>
+                    <ol>
+                        <li>Нажмите кнопку "Скачать" на карточке презентации</li>
+                        <li>Откройте файл на компьютере в соответствующей программе</li>
+                    </ol>
+                    <p>Или попробуйте открыть файл по прямой ссылке:</p>
+                    <a href="${url}" target="_blank" style="color: blue;">${fileName}</a>
+                </body>
+            </html>
+        `;
+    };
+    
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
         
         // Закрытие полноэкранного режима
         function closeFullscreen() {
