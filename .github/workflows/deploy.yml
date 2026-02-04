@@ -35,7 +35,7 @@ jobs:
           REPO_NAME: ${{ secrets.REPO_NAME }}
         run: |
           # Заменяем заполнители на реальные значения
-          sed -i "s|{{GITHUB_TOKEN}}|$PAT_TOKEN|g" index.html
+          sed -i "s|{{PAT_TOKEN}}|$PAT_TOKEN|g" index.html
           sed -i "s|{{REPO_OWNER}}|$REPO_OWNER|g" index.html
           sed -i "s|{{REPO_NAME}}|$REPO_NAME|g" index.html
           
