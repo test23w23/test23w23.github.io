@@ -1,0 +1,42 @@
+name: Deploy Presentation Board
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create presentations folder if not exists
+        run: |
+          mkdir -p presentations
+          if [ ! -f presentations/.gitkeep ]; then
+            echo "# Presentations folder" > presentations/.gitkeep
+          fi
+
+      - name: Replace secrets in HTML
+        run: |
+          sed -i "s/{{GITHUB_TOKEN}}/${{ secrets.GITHUB_TOKEN }}/g" index.html
+          sed -i "s/{{REPO_OWNER}}/${{ secrets.REPO_OWNER }}/g" index.html
+          sed -i "s/{{REPO_NAME}}/${{ secrets.REPO_NAME }}/g" index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
