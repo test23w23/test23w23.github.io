@@ -247,7 +247,7 @@
             background: rgba(0,0,0,0.9);
             padding: 10px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Центрируем по центру */
             align-items: center;
             color: white;
             flex-shrink: 0;
@@ -268,11 +268,11 @@
             color: white;
             font-size: 18px;
             font-weight: bold;
-            flex: 1;
+            margin: 0 20px; /* Отступы по бокам от заголовка */
         }
         .fullscreen-controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
         .fullscreen-close {
@@ -283,6 +283,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            margin-left: 20px; /* Отступ слева от остальных элементов */
         }
         .nav-button {
             background: #4299e1;
@@ -337,7 +338,7 @@
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 14px;
-            margin-left: 10px;
+            margin: 0 15px; /* Отступы по бокам от счетчика */
         }
         
         /* Загрузка */
@@ -434,8 +435,9 @@
             color: white;
             padding: 10px 20px;
             display: flex;
+            justify-content: center; /* Центрируем по центру */
             align-items: center;
-            gap: 15px;
+            gap: 30px; /* Увеличиваем отступы между группами */
             flex-shrink: 0;
             height: 60px;
             box-sizing: border-box;
@@ -486,24 +488,6 @@
             font-size: 14px;
             min-width: 60px;
             text-align: center;
-        }
-        .fullscreen-toggle-button {
-            background: #ed8936;
-            color: white;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s;
-            margin-left: auto;
-        }
-        .fullscreen-toggle-button:hover {
-            background: #dd6b20;
         }
     </style>
     <!-- PDF.js библиотеки -->
@@ -570,14 +554,13 @@
     <!-- Полноэкранный просмотр -->
     <div id="fullscreenOverlay" class="fullscreen-overlay" tabindex="-1">
         <div class="fullscreen-header">
-            <div id="fullscreenTitle" class="fullscreen-title"></div>
             <div class="fullscreen-controls">
-                <div class="slide-counter" id="slideCounter"></div>
                 <button class="nav-button" id="prevSlide" title="Предыдущий слайд (←)">←</button>
+                <div class="slide-counter" id="slideCounter">1 / 1</div>
                 <button class="nav-button" id="nextSlide" title="Следующий слайд (→)">→</button>
-                <button class="fullscreen-toggle-button" id="presentationFullscreen" title="Растянуть презентацию на весь экран (F5)">⛶</button>
-                <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
             </div>
+            <div id="fullscreenTitle" class="fullscreen-title"></div>
+            <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
         </div>
         <div class="fullscreen-content">
             <!-- Для Google Docs Viewer -->
@@ -587,7 +570,6 @@
             <div id="pdfViewerContainer" style="display: none; width: 100%; height: 100%;">
                 <div class="pdf-controls-bar">
                     <div class="pdf-controls-group">
-                        <span class="pdf-controls-label">Навигация:</span>
                         <button id="pdfPrev" class="pdf-control-button" title="Предыдущая страница (←)">←</button>
                         <span id="pdfPageInfo" class="pdf-page-info">Страница: <span id="currentPage">1</span> из <span id="totalPages">1</span></span>
                         <button id="pdfNext" class="pdf-control-button" title="Следующая страница (→)">→</button>
@@ -598,7 +580,6 @@
                         <span id="zoomLevel" class="pdf-zoom-info">100%</span>
                         <button id="zoomIn" class="pdf-control-button" title="Увеличить (+)">+</button>
                     </div>
-                    <button class="fullscreen-toggle-button" id="pdfFullscreen" title="Растянуть презентацию на весь экран (F5)">⛶</button>
                 </div>
                 <div style="width: 100%; height: calc(100% - 60px); overflow: auto; background: #525659;">
                     <canvas id="pdfCanvas" style="display: block; margin: 0 auto;"></canvas>
@@ -703,6 +684,8 @@
             } else {
                 overlay.classList.remove('fullscreen-mode');
             }
+            
+            console.log('F5 pressed, fullscreen mode:', isPresentationFullscreen);
         }
         
         // =========== DRAG AND DROP ФУНКЦИИ ===========
@@ -1034,7 +1017,6 @@
                     document.getElementById('pdfPrev').onclick = pdfPrevPage;
                     document.getElementById('zoomIn').onclick = pdfZoomIn;
                     document.getElementById('zoomOut').onclick = pdfZoomOut;
-                    document.getElementById('pdfFullscreen').onclick = togglePresentationFullscreen;
                     
                     updateSlideCounter();
                 }).catch(function(error) {
@@ -1081,9 +1063,18 @@
             }
         }
         
+        // Обработка клавиш
         document.addEventListener('keydown', (e) => {
             const overlay = document.getElementById('fullscreenOverlay');
             if (overlay.style.display !== 'flex') return;
+            
+            // Отлавливаем F5 и предотвращаем обновление страницы
+            if (e.key === 'F5' || e.keyCode === 116) {
+                e.preventDefault();
+                e.stopPropagation();
+                togglePresentationFullscreen();
+                return false;
+            }
             
             switch(e.key) {
                 case 'ArrowRight':
@@ -1094,10 +1085,6 @@
                 case 'ArrowLeft':
                     e.preventDefault();
                     prevSlide();
-                    break;
-                case 'F5':
-                    e.preventDefault();
-                    togglePresentationFullscreen();
                     break;
                 case 'Escape':
                     if (isPresentationFullscreen) {
@@ -1150,7 +1137,6 @@
         
         document.getElementById('nextSlide').addEventListener('click', nextSlide);
         document.getElementById('prevSlide').addEventListener('click', prevSlide);
-        document.getElementById('presentationFullscreen').addEventListener('click', togglePresentationFullscreen);
         
         function closeFullscreen() {
             const overlay = document.getElementById('fullscreenOverlay');
@@ -1181,6 +1167,23 @@
                 helpElement.style.opacity = '0';
                 setTimeout(() => helpElement.style.display = 'none', 300);
             }, 2000);
+        });
+        
+        // =========== ПЕРЕХВАТ F5 ДЛЯ ВСЕЙ СТРАНИЦЫ ===========
+        // Добавляем глобальный обработчик F5, который предотвращает обновление страницы
+        document.addEventListener('keydown', function(e) {
+            // F5 или Ctrl+R
+            if ((e.key === 'F5' || e.keyCode === 116) || 
+                (e.ctrlKey && (e.key === 'r' || e.key === 'R' || e.keyCode === 82))) {
+                // Проверяем, открыта ли презентация
+                const overlay = document.getElementById('fullscreenOverlay');
+                if (overlay.style.display === 'flex') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    togglePresentationFullscreen();
+                    return false;
+                }
+            }
         });
         
         function initialize() {
