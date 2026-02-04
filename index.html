@@ -193,42 +193,96 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: black;
             z-index: 1000;
             display: none;
             flex-direction: column;
         }
         .fullscreen-header {
-            background: rgba(255,255,255,0.1);
-            padding: 15px 30px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            color: white;
+            flex-shrink: 0;
+            height: 50px;
+            box-sizing: border-box;
         }
         .fullscreen-title {
             color: white;
             font-size: 18px;
             font-weight: bold;
+            flex: 1;
+        }
+        .fullscreen-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         .fullscreen-close {
             background: #e53e3e;
             color: white;
             border: none;
-            padding: 8px 20px;
+            padding: 8px 15px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
+        .nav-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        .nav-button:hover {
+            background: rgba(255,255,255,0.4);
+        }
         .fullscreen-content {
             flex: 1;
-            padding: 20px;
+            width: 100%;
+            height: calc(100% - 50px);
+            position: relative;
+            overflow: hidden;
         }
         .fullscreen-frame {
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 10px;
             background: white;
+        }
+        .fullscreen-help {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            z-index: 1001;
+        }
+        .fullscreen-help:hover {
+            opacity: 1;
+        }
+        .slide-counter {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
         }
         .loading {
             text-align: center;
@@ -248,7 +302,55 @@
             margin: 20px 0;
             border-radius: 4px;
         }
+        .keyboard-shortcuts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+        }
+        .key {
+            background: #333;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            min-width: 30px;
+            text-align: center;
+        }
+        .google-viewer-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+        }
+        .google-viewer-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .viewer-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            max-width: 600px;
+            text-align: center;
+        }
     </style>
+    <!-- PDF.js библиотеки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -260,6 +362,7 @@
                 <li>Загрузите презентацию в формате PDF, PPT или PPTX (до 25 МБ)</li>
                 <li>Нажмите "Просмотр" для открытия в браузере</li>
                 <li>Нажмите "Скачать" для сохранения файла на компьютер</li>
+                <li>В полноэкранном режиме используйте клавиши ← → и пробел для навигации</li>
             </ul>
         </div>
         
@@ -292,25 +395,87 @@
     </div>
     
     <!-- Полноэкранный просмотр -->
-    <div id="fullscreenOverlay" class="fullscreen-overlay">
+    <div id="fullscreenOverlay" class="fullscreen-overlay" tabindex="-1">
         <div class="fullscreen-header">
             <div id="fullscreenTitle" class="fullscreen-title"></div>
-            <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
+            <div class="fullscreen-controls">
+                <div class="slide-counter" id="slideCounter"></div>
+                <button class="nav-button" id="prevSlide" title="Предыдущий слайд (←)">←</button>
+                <button class="nav-button" id="nextSlide" title="Следующий слайд (→)">→</button>
+                <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
+            </div>
         </div>
         <div class="fullscreen-content">
-            <iframe id="fullscreenFrame" class="fullscreen-frame"></iframe>
+            <!-- Для Google Docs Viewer -->
+            <iframe id="fullscreenFrame" class="fullscreen-frame" style="display: none;"></iframe>
+            
+            <!-- Для PDF.js -->
+            <div id="pdfViewerContainer" style="display: none; width: 100%; height: 100%;">
+                <div style="display: flex; justify-content: center; padding: 10px; background: #f0f0f0;">
+                    <button id="pdfPrev" class="nav-button" style="margin: 0 5px;">←</button>
+                    <span id="pdfPageInfo" style="margin: 0 15px; display: flex; align-items: center; color: #333;">Страница: <span id="currentPage">1</span> из <span id="totalPages">1</span></span>
+                    <button id="pdfNext" class="nav-button" style="margin: 0 5px;">→</button>
+                    <div style="margin-left: 20px; display: flex; align-items: center; color: #333;">
+                        <span style="margin-right: 10px;">Масштаб:</span>
+                        <button id="zoomOut" class="nav-button" style="width: 35px; height: 35px;">-</button>
+                        <span id="zoomLevel" style="margin: 0 10px; min-width: 40px; text-align: center;">100%</span>
+                        <button id="zoomIn" class="nav-button" style="width: 35px; height: 35px;">+</button>
+                    </div>
+                </div>
+                <div style="width: 100%; height: calc(100% - 60px); overflow: auto; background: #525659;">
+                    <canvas id="pdfCanvas" style="display: block; margin: 0 auto;"></canvas>
+                </div>
+            </div>
+            
+            <div class="fullscreen-help" id="fullscreenHelp">
+                <div>Управление презентацией:</div>
+                <div class="keyboard-shortcuts">
+                    <div class="shortcut-item">
+                        <span class="key">←</span>
+                        <span>Предыдущий слайд</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">→</span>
+                        <span>Следующий слайд</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">Пробел</span>
+                        <span>Следующий слайд</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">Esc</span>
+                        <span>Выход</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // ⚠️ ЗАПОЛНИТЕЛИ - БУДУТ ЗАМЕНЕНЫ GITHUB ACTIONS
         const CONFIG = {
-            token: "{{PAT_TOKEN}}",
+            token: "{{GITHUB_TOKEN}}",
             owner: "{{REPO_OWNER}}",
             repo: "{{REPO_NAME}}",
             folder: "presentations",
-            branch: "master"
+            branch: "master"  // Используем master вместо main
         };
+        
+        // Переменные для управления презентацией
+        let currentSlide = 1;
+        let totalSlides = 1;
+        let presentationType = '';
+        let currentFileUrl = '';
+        let currentFileName = '';
+        
+        // Переменные для PDF.js
+        let pdfDoc = null;
+        let pdfPageNum = 1;
+        let pdfPageRendering = false;
+        let pdfPageNumPending = null;
+        let pdfScale = 1.0;
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const pdfCtx = pdfCanvas.getContext('2d');
         
         // =========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===========
         
@@ -325,9 +490,17 @@
         
         // Функция скачивания файла
         function downloadFile(url, filename) {
-            // Создаем временную ссылку для скачивания
+            // GitHub возвращает download_url, который может быть JSON
+            // Для скачивания лучше использовать raw.githubusercontent.com
+            
+            // Извлекаем информацию для формирования raw URL
+            const rawUrl = url.replace('api.github.com/repos', 'raw.githubusercontent.com')
+                             .replace('/contents/', '/')
+                             .replace(/\?.*$/, ''); // Убираем параметры запроса
+            
+            // Создаем ссылку для скачивания
             const link = document.createElement('a');
-            link.href = url;
+            link.href = rawUrl;
             link.download = filename;
             link.target = '_blank';
             
@@ -335,6 +508,12 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+        
+        // Обновление счётчика слайдов
+        function updateSlideCounter() {
+            const counter = document.getElementById('slideCounter');
+            counter.textContent = `${currentSlide} / ${totalSlides}`;
         }
         
         // =========== ОСНОВНЫЕ ФУНКЦИИ ===========
@@ -502,73 +681,269 @@
             }
         }
         
-       // Просмотр в полноэкранном режиме
-function viewPresentation(url, fileName) {
-    const overlay = document.getElementById('fullscreenOverlay');
-    const frame = document.getElementById('fullscreenFrame');
-    const title = document.getElementById('fullscreenTitle');
-    
-    title.textContent = fileName;
-    
-    // Определяем тип файла
-    const ext = fileName.split('.').pop().toLowerCase();
-    
-    if (ext === 'pdf') {
-        // Для PDF используем специальный viewer или прямую ссылку
-        // Вариант 1: Используем Google Docs Viewer
-        frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-    } else if (ext === 'ppt' || ext === 'pptx') {
-        // Для PowerPoint используем Google Docs Viewer
-        frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-    } else {
-        // Для остальных файлов пробуем открыть напрямую
-        frame.src = url;
-    }
-    
-    // Добавляем обработчик ошибок
-    frame.onload = function() {
-        console.log('Frame loaded successfully');
-    };
-    
-    frame.onerror = function() {
-        console.error('Error loading frame');
-        // Если не загрузилось, показываем альтернативу
-        frame.srcdoc = `
-            <html>
-                <body style="background: white; color: black; padding: 20px;">
-                    <h2>Не удалось открыть файл в браузере</h2>
-                    <p>Файл: ${fileName}</p>
-                    <p>Пожалуйста:</p>
-                    <ol>
-                        <li>Нажмите кнопку "Скачать" на карточке презентации</li>
-                        <li>Откройте файл на компьютере в соответствующей программе</li>
-                    </ol>
-                    <p>Или попробуйте открыть файл по прямой ссылке:</p>
-                    <a href="${url}" target="_blank" style="color: blue;">${fileName}</a>
-                </body>
-            </html>
-        `;
-    };
-    
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
+        // =========== PDF.JS ФУНКЦИИ ===========
+        
+        // Рендеринг страницы PDF
+        function renderPDFPage(num) {
+            if (pdfPageRendering) {
+                pdfPageNumPending = num;
+                return;
+            }
+            pdfPageNum = num;
+            pdfPageRendering = true;
+            
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: pdfScale });
+                pdfCanvas.height = viewport.height;
+                pdfCanvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: pdfCtx,
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                renderTask.promise.then(function() {
+                    pdfPageRendering = false;
+                    if (pdfPageNumPending !== null) {
+                        renderPDFPage(pdfPageNumPending);
+                        pdfPageNumPending = null;
+                    }
+                    
+                    // Обновляем информацию о странице
+                    document.getElementById('currentPage').textContent = pdfPageNum;
+                    document.getElementById('totalPages').textContent = pdfDoc.numPages;
+                    document.getElementById('zoomLevel').textContent = Math.round(pdfScale * 100) + '%';
+                    
+                    // Обновляем счётчик слайдов
+                    currentSlide = pdfPageNum;
+                    totalSlides = pdfDoc.numPages;
+                    updateSlideCounter();
+                });
+            });
+        }
+        
+        // Следующая страница PDF
+        function pdfNextPage() {
+            if (pdfPageNum >= pdfDoc.numPages) return;
+            pdfPageNum++;
+            renderPDFPage(pdfPageNum);
+        }
+        
+        // Предыдущая страница PDF
+        function pdfPrevPage() {
+            if (pdfPageNum <= 1) return;
+            pdfPageNum--;
+            renderPDFPage(pdfPageNum);
+        }
+        
+        // Увеличение масштаба PDF
+        function pdfZoomIn() {
+            if (pdfScale >= 2.5) return;
+            pdfScale += 0.1;
+            renderPDFPage(pdfPageNum);
+        }
+        
+        // Уменьшение масштаба PDF
+        function pdfZoomOut() {
+            if (pdfScale <= 0.5) return;
+            pdfScale -= 0.1;
+            renderPDFPage(pdfPageNum);
+        }
+        
+        // =========== ПОЛНОЭКРАННЫЙ РЕЖИМ ===========
+        
+        // Просмотр презентации
+        function viewPresentation(url, fileName) {
+            currentFileUrl = url;
+            currentFileName = fileName;
+            
+            const overlay = document.getElementById('fullscreenOverlay');
+            const frame = document.getElementById('fullscreenFrame');
+            const pdfViewer = document.getElementById('pdfViewerContainer');
+            const title = document.getElementById('fullscreenTitle');
+            const help = document.getElementById('fullscreenHelp');
+            
+            title.textContent = fileName;
+            
+            // Сброс состояния
+            currentSlide = 1;
+            totalSlides = 1;
+            updateSlideCounter();
+            
+            // Определяем тип файла
+            const ext = fileName.split('.').pop().toLowerCase();
+            presentationType = ext;
+            
+            if (ext === 'pdf') {
+                // Используем PDF.js для PDF файлов
+                frame.style.display = 'none';
+                pdfViewer.style.display = 'block';
+                
+                // Загружаем PDF
+                const loadingTask = pdfjsLib.getDocument(url);
+                loadingTask.promise.then(function(loadedPdfDoc) {
+                    pdfDoc = loadedPdfDoc;
+                    pdfPageNum = 1;
+                    pdfScale = 1.0;
+                    totalSlides = pdfDoc.numPages;
+                    
+                    renderPDFPage(1);
+                    
+                    // Назначаем обработчики кнопок
+                    document.getElementById('pdfNext').onclick = pdfNextPage;
+                    document.getElementById('pdfPrev').onclick = pdfPrevPage;
+                    document.getElementById('zoomIn').onclick = pdfZoomIn;
+                    document.getElementById('zoomOut').onclick = pdfZoomOut;
+                    
+                    // Обновляем счётчик слайдов
+                    updateSlideCounter();
+                }).catch(function(error) {
+                    console.error('PDF loading error:', error);
+                    // Если PDF.js не сработал, используем Google Docs Viewer как запасной вариант
+                    frame.style.display = 'block';
+                    pdfViewer.style.display = 'none';
+                    frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true&rm=minimal`;
+                });
+            } else {
+                // Для PPT/PPTX используем Google Docs Viewer
+                frame.style.display = 'block';
+                pdfViewer.style.display = 'none';
+                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true&rm=minimal`;
+            }
+            
+            // Скрываем помощь через 5 секунд
+            setTimeout(() => {
+                help.style.opacity = '0';
+                setTimeout(() => help.style.display = 'none', 300);
+            }, 5000);
+            
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Устанавливаем фокус на overlay для обработки клавиш
+            overlay.focus();
+        }
+        
+        // Навигация по слайдам
+        function nextSlide() {
+            if (presentationType === 'pdf') {
+                pdfNextPage();
+            } else {
+                // Для Google Docs Viewer просто обновляем счётчик
+                if (currentSlide < totalSlides) {
+                    currentSlide++;
+                    updateSlideCounter();
+                }
+            }
+        }
+        
+        function prevSlide() {
+            if (presentationType === 'pdf') {
+                pdfPrevPage();
+            } else {
+                // Для Google Docs Viewer просто обновляем счётчик
+                if (currentSlide > 1) {
+                    currentSlide--;
+                    updateSlideCounter();
+                }
+            }
+        }
+        
+        // Обработка клавиш
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('fullscreenOverlay');
+            if (overlay.style.display !== 'flex') return;
+            
+            switch(e.key) {
+                case 'ArrowRight':
+                case ' ':
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case 'Escape':
+                    closeFullscreen();
+                    break;
+                case 'Home':
+                    if (presentationType === 'pdf') {
+                        pdfPageNum = 1;
+                        renderPDFPage(pdfPageNum);
+                    } else {
+                        currentSlide = 1;
+                        updateSlideCounter();
+                    }
+                    break;
+                case 'End':
+                    if (presentationType === 'pdf') {
+                        pdfPageNum = pdfDoc.numPages;
+                        renderPDFPage(pdfPageNum);
+                    } else {
+                        currentSlide = totalSlides;
+                        updateSlideCounter();
+                    }
+                    break;
+                case '+':
+                case '=':
+                    if (presentationType === 'pdf') {
+                        e.preventDefault();
+                        pdfZoomIn();
+                    }
+                    break;
+                case '-':
+                    if (presentationType === 'pdf') {
+                        e.preventDefault();
+                        pdfZoomOut();
+                    }
+                    break;
+                case 'h':
+                case 'H':
+                    const help = document.getElementById('fullscreenHelp');
+                    help.style.display = help.style.display === 'none' ? 'block' : 'none';
+                    if (help.style.display === 'block') {
+                        help.style.opacity = '0.8';
+                    }
+                    break;
+            }
+        });
+        
+        // Кнопки навигации
+        document.getElementById('nextSlide').addEventListener('click', nextSlide);
+        document.getElementById('prevSlide').addEventListener('click', prevSlide);
         
         // Закрытие полноэкранного режима
         function closeFullscreen() {
             const overlay = document.getElementById('fullscreenOverlay');
             const frame = document.getElementById('fullscreenFrame');
+            const pdfViewer = document.getElementById('pdfViewerContainer');
+            const help = document.getElementById('fullscreenHelp');
             
             frame.src = '';
+            frame.style.display = 'none';
+            pdfViewer.style.display = 'none';
             overlay.style.display = 'none';
+            help.style.display = 'block';
+            help.style.opacity = '0.8';
             document.body.style.overflow = 'auto';
         }
         
-        // Закрытие по Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeFullscreen();
-            }
+        // Автоматическое скрытие помощи при наведении курсора
+        let helpTimer;
+        const helpElement = document.getElementById('fullscreenHelp');
+        
+        helpElement.addEventListener('mouseenter', () => {
+            clearTimeout(helpTimer);
+        });
+        
+        helpElement.addEventListener('mouseleave', () => {
+            helpTimer = setTimeout(() => {
+                helpElement.style.opacity = '0';
+                setTimeout(() => helpElement.style.display = 'none', 300);
+            }, 2000);
         });
         
         // Загружаем список при загрузке страницы
