@@ -269,54 +269,69 @@
             background: black;
             z-index: 1000;
             display: none;
-            flex-direction: column;
         }
         
-        .fullscreen-header {
-            background: rgba(0,0,0,0.9);
-            padding: 10px 20px;
+        /* Контейнер для PPT/PPTX через Google Docs */
+        .google-docs-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .google-docs-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        /* Панель управления для PPT/PPTX */
+        .ppt-controls-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
-            flex-shrink: 0;
-            height: 50px;
-            box-sizing: border-box;
-            transition: opacity 0.3s, transform 0.3s;
-            opacity: 1;
-            transform: translateY(0);
+            z-index: 1001;
+            transition: opacity 0.3s;
         }
         
-        .fullscreen-header.hidden {
+        .ppt-controls-overlay.hidden {
             opacity: 0;
-            transform: translateY(-100%);
             pointer-events: none;
         }
         
-        .fullscreen-title {
-            color: white;
+        .ppt-controls-overlay:hover {
+            opacity: 1;
+        }
+        
+        .ppt-title {
             font-size: 18px;
             font-weight: bold;
             flex: 1;
         }
         
-        .fullscreen-controls {
+        .ppt-controls {
             display: flex;
             gap: 10px;
             align-items: center;
         }
         
-        .fullscreen-close {
-            background: #e53e3e;
+        .ppt-slide-counter {
+            background: rgba(255,255,255,0.3);
             color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin: 0 10px;
         }
         
-        .fullscreen-nav-button {
+        .ppt-nav-button {
             background: rgba(255,255,255,0.3);
             color: white;
             border: none;
@@ -331,51 +346,38 @@
             transition: background 0.3s;
         }
         
-        .fullscreen-nav-button:hover {
+        .ppt-nav-button:hover {
             background: rgba(255,255,255,0.5);
         }
         
-        .fullscreen-content {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .fullscreen-frame {
-            width: 100%;
-            height: 100%;
+        .ppt-close-button {
+            background: #e53e3e;
+            color: white;
             border: none;
-            background: white;
-        }
-        
-        .fullscreen-help {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            z-index: 1001;
-        }
-        
-        .fullscreen-help:hover {
-            opacity: 1;
-        }
-        
-        .slide-counter {
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
             margin-left: 10px;
+        }
+        
+        /* Индикатор для скрытых элементов управления */
+        .controls-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1002;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .controls-indicator:hover {
+            opacity: 1;
         }
         
         /* Загрузка */
@@ -433,43 +435,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             background: #f0f0f0;
-        }
-        
-        .pdf-viewer-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .viewer-message {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px;
-            max-width: 600px;
-            text-align: center;
-        }
-        
-        /* Загрузка файла */
-        .file-progress {
-            width: 100%;
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 2px;
-            margin-top: 10px;
-            overflow: hidden;
-            display: none;
-        }
-        
-        .file-progress-bar {
-            height: 100%;
-            background: #48bb78;
-            width: 0%;
-            transition: width 0.3s;
         }
         
         /* Панель управления PDF */
@@ -477,12 +443,17 @@
             background: #2d3748;
             padding: 10px 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 20px;
             flex-shrink: 0;
             height: 60px;
             box-sizing: border-box;
+            transition: opacity 0.3s;
+        }
+        
+        .pdf-controls-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         
         .pdf-control-button {
@@ -529,6 +500,40 @@
             font-size: 14px;
         }
         
+        .pdf-content {
+            flex: 1;
+            width: 100%;
+            overflow: auto;
+            background: #525659;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #pdfCanvas {
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Загрузка файла */
+        .file-progress {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .file-progress-bar {
+            height: 100%;
+            background: #48bb78;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
         /* Кнопка для ручного обновления списка */
         .refresh-btn {
             background: #4299e1;
@@ -554,31 +559,6 @@
             align-items: center;
             margin-bottom: 15px;
         }
-        
-        /* Плавающая кнопка для показа меню в полноэкранном режиме */
-        .menu-toggle-btn {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1002;
-            opacity: 0.5;
-            transition: opacity 0.3s;
-        }
-        
-        .menu-toggle-btn:hover {
-            opacity: 1;
-        }
     </style>
     <!-- PDF.js библиотеки -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
@@ -594,7 +574,7 @@
                 <li><strong>Выберите файл:</strong> нажмите кнопку или перетащите файл в выделенную область</li>
                 <li><strong>Поддерживаемые форматы:</strong> PDF, PPT, PPTX (максимум 25 МБ)</li>
                 <li><strong>Просмотр:</strong> нажмите "Просмотр" для открытия в полноэкранном режиме</li>
-                <li><strong>Управление в просмотре:</strong> ← → для навигации, Пробел - следующий слайд, F5 - скрыть/показать меню</li>
+                <li><strong>Управление в просмотре:</strong> ← → для навигации, Пробел - следующий слайд, F5 - полноэкранный режим браузера</li>
                 <li><strong>Скачивание:</strong> нажмите "Скачать" для сохранения файла на компьютер</li>
             </ul>
         </div>
@@ -646,68 +626,45 @@
         </div>
     </div>
     
-    <!-- Полноэкранный просмотр -->
+    <!-- Полноэкранный просмотр для PDF -->
     <div id="fullscreenOverlay" class="fullscreen-overlay" tabindex="-1">
-        <div id="fullscreenHeader" class="fullscreen-header">
-            <div id="fullscreenTitle" class="fullscreen-title"></div>
-            <div class="fullscreen-controls">
-                <div class="slide-counter" id="slideCounter"></div>
-                <button class="fullscreen-nav-button" id="prevSlide" title="Предыдущий слайд (←)">←</button>
-                <button class="fullscreen-nav-button" id="nextSlide" title="Следующий слайд (→)">→</button>
-                <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
+        <!-- Контейнер для PDF -->
+        <div id="pdfViewerContainer" class="pdf-viewer-container" style="display: none;">
+            <div id="pdfControlsPanel" class="pdf-controls-panel">
+                <div class="pdf-controls-group">
+                    <button id="pdfPrev" class="pdf-control-button" title="Предыдущая страница (←)">←</button>
+                    <span id="pdfPageInfo" class="pdf-page-info">Страница: <span id="currentPage">1</span> из <span id="totalPages">1</span></span>
+                    <button id="pdfNext" class="pdf-control-button" title="Следующая страница (→)">→</button>
+                </div>
+                <div class="pdf-controls-group">
+                    <span class="pdf-controls-label">Масштаб:</span>
+                    <button id="zoomOut" class="pdf-control-button" title="Уменьшить (-)">-</button>
+                    <span id="zoomLevel" class="pdf-zoom-info">100%</span>
+                    <button id="zoomIn" class="pdf-control-button" title="Увеличить (+)">+</button>
+                    <button id="exitFullscreenBtn" class="pdf-control-button" style="margin-left: 10px;" title="Выйти из полноэкранного режима (Esc)">✕</button>
+                </div>
+            </div>
+            <div class="pdf-content">
+                <canvas id="pdfCanvas"></canvas>
             </div>
         </div>
-        <button id="menuToggleBtn" class="menu-toggle-btn" onclick="toggleMenu()" style="display: none;">☰</button>
-        <div class="fullscreen-content">
-            <!-- Для Google Docs Viewer -->
-            <iframe id="fullscreenFrame" class="fullscreen-frame" style="display: none;"></iframe>
-            
-            <!-- Для PDF.js -->
-            <div id="pdfViewerContainer" style="display: none; width: 100%; height: 100%;">
-                <div class="pdf-controls-panel">
-                    <div class="pdf-controls-group">
-                        <button id="pdfPrev" class="pdf-control-button" title="Предыдущая страница (←)">←</button>
-                        <span id="pdfPageInfo" class="pdf-page-info">Страница: <span id="currentPage">1</span> из <span id="totalPages">1</span></span>
-                        <button id="pdfNext" class="pdf-control-button" title="Следующая страница (→)">→</button>
-                    </div>
-                    <div class="pdf-controls-group">
-                        <span class="pdf-controls-label">Масштаб:</span>
-                        <button id="zoomOut" class="pdf-control-button" title="Уменьшить (-)">-</button>
-                        <span id="zoomLevel" class="pdf-zoom-info">100%</span>
-                        <button id="zoomIn" class="pdf-control-button" title="Увеличить (+)">+</button>
-                        <button id="fullscreenToggle" class="pdf-control-button" style="margin-left: 10px;" title="Полноэкранный режим браузера (F11)">⛶</button>
-                    </div>
-                </div>
-                <div style="width: 100%; height: calc(100% - 60px); overflow: auto; background: #525659;">
-                    <canvas id="pdfCanvas" style="display: block; margin: 0 auto;"></canvas>
+        
+        <!-- Контейнер для PPT/PPTX -->
+        <div id="pptViewerContainer" class="google-docs-container" style="display: none;">
+            <div id="pptControlsOverlay" class="ppt-controls-overlay">
+                <div id="pptTitle" class="ppt-title"></div>
+                <div class="ppt-controls">
+                    <button id="pptPrev" class="ppt-nav-button" title="Предыдущий слайд (←)">←</button>
+                    <span id="pptSlideCounter" class="ppt-slide-counter">1/1</span>
+                    <button id="pptNext" class="ppt-nav-button" title="Следующий слайд (→)">→</button>
+                    <button id="pptClose" class="ppt-close-button" title="Закрыть (Esc)">✕ Закрыть</button>
                 </div>
             </div>
-            
-            <div class="fullscreen-help" id="fullscreenHelp">
-                <div>Управление презентацией:</div>
-                <div class="keyboard-shortcuts">
-                    <div class="shortcut-item">
-                        <span class="key">←</span>
-                        <span>Предыдущий слайд</span>
-                    </div>
-                    <div class="shortcut-item">
-                        <span class="key">→</span>
-                        <span>Следующий слайд</span>
-                    </div>
-                    <div class="shortcut-item">
-                        <span class="key">Пробел</span>
-                        <span>Следующий слайд</span>
-                    </div>
-                    <div class="shortcut-item">
-                        <span class="key">F5</span>
-                        <span>Скрыть/показать меню</span>
-                    </div>
-                    <div class="shortcut-item">
-                        <span class="key">Esc</span>
-                        <span>Выход</span>
-                    </div>
-                </div>
-            </div>
+            <iframe id="pptFrame" class="google-docs-frame"></iframe>
+        </div>
+        
+        <div id="controlsIndicator" class="controls-indicator" style="display: none;">
+            Нажмите F5 для выхода из полноэкранного режима
         </div>
     </div>
 
@@ -727,8 +684,8 @@
         let presentationType = '';
         let currentFileUrl = '';
         let currentFileName = '';
-        let isMenuVisible = true;
         let isBrowserFullscreen = false;
+        let controlsHidden = false;
         
         // Переменные для навигации по списку презентаций
         let currentPresentationIndex = 0;
@@ -777,26 +734,17 @@
             document.body.removeChild(link);
         }
         
-        // Обновление счётчика слайдов
-        function updateSlideCounter() {
-            const counter = document.getElementById('slideCounter');
+        // Обновление счётчика слайдов для PPT/PPTX
+        function updatePPTSlideCounter() {
+            const counter = document.getElementById('pptSlideCounter');
             counter.textContent = `${currentSlide} / ${totalSlides}`;
         }
         
-        // Переключение меню в полноэкранном режиме
-        function toggleMenu() {
-            const header = document.getElementById('fullscreenHeader');
-            const toggleBtn = document.getElementById('menuToggleBtn');
-            
-            isMenuVisible = !isMenuVisible;
-            
-            if (isMenuVisible) {
-                header.classList.remove('hidden');
-                toggleBtn.style.display = 'none';
-            } else {
-                header.classList.add('hidden');
-                toggleBtn.style.display = 'flex';
-            }
+        // Обновление счётчика страниц для PDF
+        function updatePDFPageInfo() {
+            document.getElementById('currentPage').textContent = pdfPageNum;
+            document.getElementById('totalPages').textContent = pdfDoc.numPages;
+            document.getElementById('zoomLevel').textContent = Math.round(pdfScale * 100) + '%';
         }
         
         // Переключение полноэкранного режима браузера
@@ -804,15 +752,66 @@
             const overlay = document.getElementById('fullscreenOverlay');
             
             if (!document.fullscreenElement) {
+                // Входим в полноэкранный режим
                 overlay.requestFullscreen?.() || 
                 overlay.webkitRequestFullscreen?.() || 
                 overlay.msRequestFullscreen?.();
+                
+                // Скрываем элементы управления
+                hideControls();
+                
+                // Показываем индикатор
+                document.getElementById('controlsIndicator').style.display = 'block';
+                
                 isBrowserFullscreen = true;
             } else {
+                // Выходим из полноэкранного режима
                 document.exitFullscreen?.() || 
                 document.webkitExitFullscreen?.() || 
                 document.msExitFullscreen?.();
+                
+                // Показываем элементы управления
+                showControls();
+                
+                // Скрываем индикатор
+                document.getElementById('controlsIndicator').style.display = 'none';
+                
                 isBrowserFullscreen = false;
+            }
+        }
+        
+        // Скрыть элементы управления
+        function hideControls() {
+            if (presentationType === 'pdf') {
+                document.getElementById('pdfControlsPanel').classList.add('hidden');
+            } else if (presentationType === 'ppt' || presentationType === 'pptx') {
+                document.getElementById('pptControlsOverlay').classList.add('hidden');
+            }
+            controlsHidden = true;
+        }
+        
+        // Показать элементы управления
+        function showControls() {
+            if (presentationType === 'pdf') {
+                document.getElementById('pdfControlsPanel').classList.remove('hidden');
+            } else if (presentationType === 'ppt' || presentationType === 'pptx') {
+                document.getElementById('pptControlsOverlay').classList.remove('hidden');
+            }
+            controlsHidden = false;
+        }
+        
+        // Переключить видимость элементов управления
+        function toggleControls() {
+            if (controlsHidden) {
+                showControls();
+                // Скрываем через 3 секунды если в полноэкранном режиме
+                if (isBrowserFullscreen) {
+                    setTimeout(() => {
+                        if (isBrowserFullscreen) hideControls();
+                    }, 3000);
+                }
+            } else {
+                hideControls();
             }
         }
         
@@ -1112,14 +1111,11 @@
                     }
                     
                     // Обновляем информацию о странице
-                    document.getElementById('currentPage').textContent = pdfPageNum;
-                    document.getElementById('totalPages').textContent = pdfDoc.numPages;
-                    document.getElementById('zoomLevel').textContent = Math.round(pdfScale * 100) + '%';
+                    updatePDFPageInfo();
                     
                     // Обновляем счётчик слайдов
                     currentSlide = pdfPageNum;
                     totalSlides = pdfDoc.numPages;
-                    updateSlideCounter();
                 });
             });
         }
@@ -1172,33 +1168,27 @@
             currentFileName = fileName;
             
             const overlay = document.getElementById('fullscreenOverlay');
-            const frame = document.getElementById('fullscreenFrame');
             const pdfViewer = document.getElementById('pdfViewerContainer');
-            const title = document.getElementById('fullscreenTitle');
-            const help = document.getElementById('fullscreenHelp');
-            const toggleBtn = document.getElementById('menuToggleBtn');
-            
-            title.textContent = fileName;
+            const pptViewer = document.getElementById('pptViewerContainer');
+            const pptTitle = document.getElementById('pptTitle');
             
             // Сброс состояния
             currentSlide = 1;
             totalSlides = 1;
-            isMenuVisible = true;
-            updateSlideCounter();
-            
-            // Показываем меню и скрываем кнопку переключения
-            const header = document.getElementById('fullscreenHeader');
-            header.classList.remove('hidden');
-            toggleBtn.style.display = 'none';
+            isBrowserFullscreen = false;
+            controlsHidden = false;
             
             // Определяем тип файла
             const ext = fileName.split('.').pop().toLowerCase();
             presentationType = ext;
             
+            // Скрываем индикатор
+            document.getElementById('controlsIndicator').style.display = 'none';
+            
             if (ext === 'pdf') {
                 // Используем PDF.js для PDF файлов
-                frame.style.display = 'none';
-                pdfViewer.style.display = 'block';
+                pdfViewer.style.display = 'flex';
+                pptViewer.style.display = 'none';
                 
                 // Загружаем PDF
                 const loadingTask = pdfjsLib.getDocument(url);
@@ -1215,86 +1205,96 @@
                     document.getElementById('pdfPrev').onclick = pdfPrevPage;
                     document.getElementById('zoomIn').onclick = pdfZoomIn;
                     document.getElementById('zoomOut').onclick = pdfZoomOut;
-                    document.getElementById('fullscreenToggle').onclick = toggleBrowserFullscreen;
+                    document.getElementById('exitFullscreenBtn').onclick = closeFullscreen;
                     
-                    // Обновляем счётчик слайдов
-                    updateSlideCounter();
                 }).catch(function(error) {
                     console.error('PDF loading error:', error);
-                    // Если PDF.js не сработал, используем Google Docs Viewer как запасной вариант
-                    frame.style.display = 'block';
-                    pdfViewer.style.display = 'none';
-                    frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true&rm=minimal`;
+                    alert('Ошибка загрузки PDF файла. Пожалуйста, проверьте файл.');
+                    closeFullscreen();
                 });
-            } else {
+            } else if (ext === 'ppt' || ext === 'pptx') {
                 // Для PPT/PPTX используем Google Docs Viewer
-                frame.style.display = 'block';
                 pdfViewer.style.display = 'none';
-                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true&rm=minimal`;
+                pptViewer.style.display = 'block';
+                
+                pptTitle.textContent = fileName;
+                updatePPTSlideCounter();
+                
+                // Устанавливаем URL для iframe
+                const pptFrame = document.getElementById('pptFrame');
+                pptFrame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true&rm=minimal`;
+                
+                // Назначаем обработчики кнопок
+                document.getElementById('pptNext').onclick = pptNextSlide;
+                document.getElementById('pptPrev').onclick = pptPrevSlide;
+                document.getElementById('pptClose').onclick = closeFullscreen;
+                
+                // Устанавливаем начальные значения
+                currentSlide = 1;
+                totalSlides = 20; // Приблизительное количество слайдов для PPT
             }
             
-            // Скрываем помощь через 5 секунд
-            setTimeout(() => {
-                help.style.opacity = '0';
-                setTimeout(() => help.style.display = 'none', 300);
-            }, 5000);
-            
-            overlay.style.display = 'flex';
+            overlay.style.display = 'block';
             document.body.style.overflow = 'hidden';
             
             // Устанавливаем фокус на overlay для обработки клавиш
             overlay.focus();
         }
         
-        // Навигация по слайдам
-        function nextSlide() {
-            if (presentationType === 'pdf') {
-                pdfNextPage();
-            } else {
-                // Для Google Docs Viewer просто обновляем счётчик
-                if (currentSlide < totalSlides) {
-                    currentSlide++;
-                    updateSlideCounter();
-                }
+        // Навигация для PPT/PPTX
+        function pptNextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updatePPTSlideCounter();
+                // Здесь можно добавить управление iframe, но Google Docs Viewer не предоставляет API
+                // Поэтому просто обновляем счетчик
             }
         }
         
-        function prevSlide() {
-            if (presentationType === 'pdf') {
-                pdfPrevPage();
-            } else {
-                // Для Google Docs Viewer просто обновляем счётчик
-                if (currentSlide > 1) {
-                    currentSlide--;
-                    updateSlideCounter();
-                }
+        function pptPrevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updatePPTSlideCounter();
             }
         }
         
         // Обработка клавиш
         document.addEventListener('keydown', (e) => {
             const overlay = document.getElementById('fullscreenOverlay');
-            if (overlay.style.display !== 'flex') return;
+            if (overlay.style.display !== 'block') return;
+            
+            // Предотвращаем действия по умолчанию для управляющих клавиш
+            if ([
+                'ArrowRight', 'ArrowLeft', ' ', 'F5', 'Escape', 
+                'Home', 'End', '+', '=', '-', 'PageUp', 'PageDown'
+            ].includes(e.key)) {
+                e.preventDefault();
+            }
             
             switch(e.key) {
                 case 'ArrowRight':
                 case ' ':
-                    e.preventDefault();
-                    nextSlide();
+                    if (presentationType === 'pdf') {
+                        pdfNextPage();
+                    } else if (presentationType === 'ppt' || presentationType === 'pptx') {
+                        pptNextSlide();
+                    }
                     break;
                 case 'ArrowLeft':
-                    e.preventDefault();
-                    prevSlide();
+                    if (presentationType === 'pdf') {
+                        pdfPrevPage();
+                    } else if (presentationType === 'ppt' || presentationType === 'pptx') {
+                        pptPrevSlide();
+                    }
                     break;
                 case 'F5':
-                    e.preventDefault(); // Предотвращаем обновление страницы
-                    toggleMenu();
+                    toggleBrowserFullscreen();
                     break;
                 case 'Escape':
                     if (document.fullscreenElement) {
-                        document.exitFullscreen?.() || 
-                        document.webkitExitFullscreen?.() || 
-                        document.msExitFullscreen?.();
+                        document.exitFullscreen();
+                        showControls();
+                        document.getElementById('controlsIndicator').style.display = 'none';
                         isBrowserFullscreen = false;
                     } else {
                         closeFullscreen();
@@ -1304,44 +1304,36 @@
                     if (presentationType === 'pdf') {
                         pdfPageNum = 1;
                         renderPDFPage(pdfPageNum);
-                    } else {
+                    } else if (presentationType === 'ppt' || presentationType === 'pptx') {
                         currentSlide = 1;
-                        updateSlideCounter();
+                        updatePPTSlideCounter();
                     }
                     break;
                 case 'End':
                     if (presentationType === 'pdf') {
                         pdfPageNum = pdfDoc.numPages;
                         renderPDFPage(pdfPageNum);
-                    } else {
+                    } else if (presentationType === 'ppt' || presentationType === 'pptx') {
                         currentSlide = totalSlides;
-                        updateSlideCounter();
+                        updatePPTSlideCounter();
                     }
                     break;
                 case '+':
                 case '=':
                     if (presentationType === 'pdf') {
-                        e.preventDefault();
                         pdfZoomIn();
                     }
                     break;
                 case '-':
                     if (presentationType === 'pdf') {
-                        e.preventDefault();
                         pdfZoomOut();
                     }
                     break;
                 case 'h':
                 case 'H':
-                    const help = document.getElementById('fullscreenHelp');
-                    help.style.display = help.style.display === 'none' ? 'block' : 'none';
-                    if (help.style.display === 'block') {
-                        help.style.opacity = '0.8';
-                    }
+                    toggleControls();
                     break;
-                // Навигация по презентациям в полноэкранном режиме
                 case 'PageUp':
-                    e.preventDefault();
                     if (currentPresentationIndex > 0) {
                         currentPresentationIndex--;
                         const presentation = presentationsList[currentPresentationIndex];
@@ -1351,7 +1343,6 @@
                     }
                     break;
                 case 'PageDown':
-                    e.preventDefault();
                     if (currentPresentationIndex < totalPresentations - 1) {
                         currentPresentationIndex++;
                         const presentation = presentationsList[currentPresentationIndex];
@@ -1363,50 +1354,55 @@
             }
         });
         
-        // Кнопки навигации
-        document.getElementById('nextSlide').addEventListener('click', nextSlide);
-        document.getElementById('prevSlide').addEventListener('click', prevSlide);
-        
         // Закрытие полноэкранного режима
         function closeFullscreen() {
             const overlay = document.getElementById('fullscreenOverlay');
-            const frame = document.getElementById('fullscreenFrame');
             const pdfViewer = document.getElementById('pdfViewerContainer');
-            const help = document.getElementById('fullscreenHelp');
-            const toggleBtn = document.getElementById('menuToggleBtn');
+            const pptViewer = document.getElementById('pptViewerContainer');
+            const pptFrame = document.getElementById('pptFrame');
             
-            frame.src = '';
-            frame.style.display = 'none';
+            // Сбрасываем iframe
+            pptFrame.src = '';
+            
+            // Скрываем контейнеры
             pdfViewer.style.display = 'none';
+            pptViewer.style.display = 'none';
+            
             overlay.style.display = 'none';
-            help.style.display = 'block';
-            help.style.opacity = '0.8';
-            toggleBtn.style.display = 'none';
             document.body.style.overflow = 'auto';
             
-            // Выходим из полноэкранного режима, если он активен
+            // Выходим из полноэкранного режима браузера
             if (document.fullscreenElement) {
                 document.exitFullscreen?.() || 
                 document.webkitExitFullscreen?.() || 
                 document.msExitFullscreen?.();
                 isBrowserFullscreen = false;
             }
+            
+            // Показываем элементы управления
+            showControls();
+            document.getElementById('controlsIndicator').style.display = 'none';
         }
         
-        // Автоматическое скрытие помощи при наведении курсора
-        let helpTimer;
-        const helpElement = document.getElementById('fullscreenHelp');
+        // Обработка событий полноэкранного режима
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
         
-        helpElement.addEventListener('mouseenter', () => {
-            clearTimeout(helpTimer);
-        });
-        
-        helpElement.addEventListener('mouseleave', () => {
-            helpTimer = setTimeout(() => {
-                helpElement.style.opacity = '0';
-                setTimeout(() => helpElement.style.display = 'none', 300);
-            }, 2000);
-        });
+        function handleFullscreenChange() {
+            isBrowserFullscreen = !!document.fullscreenElement;
+            
+            if (isBrowserFullscreen) {
+                // Скрываем элементы управления при входе в полноэкранный режим
+                hideControls();
+                document.getElementById('controlsIndicator').style.display = 'block';
+            } else {
+                // Показываем элементы управления при выходе из полноэкранного режима
+                showControls();
+                document.getElementById('controlsIndicator').style.display = 'none';
+            }
+        }
         
         // =========== ИНИЦИАЛИЗАЦИЯ ===========
         
