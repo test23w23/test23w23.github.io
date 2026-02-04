@@ -209,9 +209,6 @@
             color: white;
             font-size: 18px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         .fullscreen-close {
             background: #e53e3e;
@@ -225,10 +222,6 @@
         .fullscreen-content {
             flex: 1;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
         .fullscreen-frame {
             width: 100%;
@@ -236,23 +229,6 @@
             border: none;
             border-radius: 10px;
             background: white;
-        }
-        .fullscreen-download {
-            background: #48bb78;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .fullscreen-download:hover {
-            background: #38a169;
         }
         .loading {
             text-align: center;
@@ -264,14 +240,6 @@
             gap: 15px;
             margin-top: 15px;
             flex-wrap: wrap;
-        }
-        .error-message {
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
         }
         .instructions {
             background: #e6f7ff;
@@ -292,7 +260,6 @@
                 <li>Загрузите презентацию в формате PDF, PPT или PPTX (до 25 МБ)</li>
                 <li>Нажмите "Просмотр" для открытия в браузере</li>
                 <li>Нажмите "Скачать" для сохранения файла на компьютер</li>
-                <li>В полноэкранном режиме также есть кнопка скачивания</li>
             </ul>
         </div>
         
@@ -327,25 +294,10 @@
     <!-- Полноэкранный просмотр -->
     <div id="fullscreenOverlay" class="fullscreen-overlay">
         <div class="fullscreen-header">
-            <div id="fullscreenTitle" class="fullscreen-title">
-                <span id="currentFileName"></span>
-            </div>
-            <div>
-                <a id="fullscreenDownloadBtn" class="fullscreen-download" style="margin-right: 10px;" download>
-                    ⬇️ Скачать
-                </a>
-                <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
-            </div>
+            <div id="fullscreenTitle" class="fullscreen-title"></div>
+            <button class="fullscreen-close" onclick="closeFullscreen()">✕ Закрыть</button>
         </div>
         <div class="fullscreen-content">
-            <div id="viewerError" class="error-message" style="display: none;">
-                <p>Не удалось открыть файл в браузере. Пожалуйста:</p>
-                <ol style="text-align: left; margin: 10px 0;">
-                    <li>Нажмите кнопку "Скачать" вверху справа</li>
-                    <li>Откройте файл на компьютере в PowerPoint или другой программе</li>
-                    <li>Или попробуйте преобразовать файл в PDF перед загрузкой</li>
-                </ol>
-            </div>
             <iframe id="fullscreenFrame" class="fullscreen-frame"></iframe>
         </div>
     </div>
@@ -383,16 +335,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            // Для некоторых браузеров может потребоваться дополнительный подход
-            setTimeout(() => {
-                // Альтернативный метод для старых браузеров
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = url;
-                document.body.appendChild(iframe);
-                setTimeout(() => document.body.removeChild(iframe), 5000);
-            }, 100);
         }
         
         // =========== ОСНОВНЫЕ ФУНКЦИИ ===========
@@ -556,77 +498,30 @@
                 
             } catch (error) {
                 console.error('Load error:', error);
-                listDiv.innerHTML = '<div class="error-message">❌ Ошибка загрузки списка. Попробуйте обновить страницу.</div>';
+                listDiv.innerHTML = '<div class="loading">❌ Ошибка загрузки списка</div>';
             }
         }
-        
-        // Текущий открытый файл для скачивания
-        let currentFileUrl = '';
-        let currentFileName = '';
         
         // Просмотр в полноэкранном режиме
         function viewPresentation(url, fileName) {
             const overlay = document.getElementById('fullscreenOverlay');
             const frame = document.getElementById('fullscreenFrame');
-            const title = document.getElementById('currentFileName');
-            const downloadBtn = document.getElementById('fullscreenDownloadBtn');
-            const errorDiv = document.getElementById('viewerError');
+            const title = document.getElementById('fullscreenTitle');
             
-            // Сохраняем данные для скачивания
-            currentFileUrl = url;
-            currentFileName = fileName;
-            
-            // Обновляем интерфейс
             title.textContent = fileName;
-            downloadBtn.href = url;
-            downloadBtn.download = fileName;
-            errorDiv.style.display = 'none';
             
             // Определяем тип файла
             const ext = fileName.split('.').pop().toLowerCase();
             
-            // Проверяем, поддерживается ли файл для просмотра
-            const isViewable = ext === 'pdf' || ext === 'ppt' || ext === 'pptx';
-            
-            if (isViewable) {
-                if (ext === 'pdf') {
-                    // PDF показываем напрямую
-                    frame.src = url;
-                    frame.style.display = 'block';
-                } else if (ext === 'ppt' || ext === 'pptx') {
-                    // Для PowerPoint используем Google Docs Viewer
-                    frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-                    frame.style.display = 'block';
-                }
-                
-                // Слушаем ошибки загрузки iframe
-                frame.onerror = function() {
-                    frame.style.display = 'none';
-                    errorDiv.style.display = 'block';
-                };
-                
-                // Проверяем, загрузился ли iframe через 5 секунд
-                setTimeout(() => {
-                    try {
-                        // Пытаемся получить доступ к содержимому iframe
-                        const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-                        if (!iframeDoc || iframeDoc.body.innerHTML.includes('Sorry')) {
-                            throw new Error('Не удалось загрузить');
-                        }
-                    } catch (e) {
-                        // Если возникла ошибка (CORS или другая)
-                        frame.style.display = 'none';
-                        errorDiv.style.display = 'block';
-                    }
-                }, 5000);
+            if (ext === 'pdf') {
+                // PDF показываем напрямую
+                frame.src = url;
+            } else if (ext === 'ppt' || ext === 'pptx') {
+                // Для PowerPoint используем Google Docs Viewer
+                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
             } else {
-                // Если формат не поддерживается для просмотра
-                frame.style.display = 'none';
-                errorDiv.innerHTML = `
-                    <p>Формат файла .${ext.toUpperCase()} не поддерживается для просмотра в браузере.</p>
-                    <p>Нажмите кнопку "Скачать" чтобы открыть файл на компьютере.</p>
-                `;
-                errorDiv.style.display = 'block';
+                // Для остальных файлов
+                frame.src = url;
             }
             
             overlay.style.display = 'flex';
@@ -641,13 +536,6 @@
             frame.src = '';
             overlay.style.display = 'none';
             document.body.style.overflow = 'auto';
-        }
-        
-        // Скачивание текущего файла из полноэкранного режима
-        function downloadCurrentFile() {
-            if (currentFileUrl && currentFileName) {
-                downloadFile(currentFileUrl, currentFileName);
-            }
         }
         
         // Закрытие по Escape
