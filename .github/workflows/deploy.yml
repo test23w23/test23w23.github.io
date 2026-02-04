@@ -5,38 +5,51 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
+        
       - name: Create presentations folder if not exists
         run: |
           mkdir -p presentations
           if [ ! -f presentations/.gitkeep ]; then
             echo "# Presentations folder" > presentations/.gitkeep
           fi
-
+        
+      - name: Create .nojekyll file
+        run: echo "" > .nojekyll
+        
       - name: Replace secrets in HTML
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}  # Используем ваш PAT
+          REPO_OWNER: ${{ secrets.REPO_OWNER }}
+          REPO_NAME: ${{ secrets.REPO_NAME }}
         run: |
-          sed -i "s/{{GITHUB_TOKEN}}/${{ secrets.GITHUB_TOKEN }}/g" index.html
-          sed -i "s/{{REPO_OWNER}}/${{ secrets.REPO_OWNER }}/g" index.html
-          sed -i "s/{{REPO_NAME}}/${{ secrets.REPO_NAME }}/g" index.html
-
+          # Заменяем заполнители на реальные значения
+          sed -i "s|{{GITHUB_TOKEN}}|$PAT_TOKEN|g" index.html
+          sed -i "s|{{REPO_OWNER}}|$REPO_OWNER|g" index.html
+          sed -i "s|{{REPO_NAME}}|$REPO_NAME|g" index.html
+          
+          # Удаляем комментарии для безопасности
+          sed -i '/<!--.*-->/d' index.html
+          sed -i '/\/\*.*\*\//d' index.html
+        
       - name: Setup Pages
-        uses: actions/configure-pages@v3
-
+        uses: actions/configure-pages@v4
+        
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
-
+          
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
