@@ -1,34 +1,153 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
+<html lang="ru">
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доска презентаций</title>
     <style>
-    body {
-      margin: 0;           
-    }
-    iframe {
-      display: block;       
-      background: #ffffff;
-      border: none;        
-      height: 100vh;      
-      width: 100vw;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; padding: 20px; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: white; margin-bottom: 30px; font-size: 2.5em; }
+        .upload-zone { 
+            background: white; border: 3px dashed #ccc; border-radius: 15px; 
+            padding: 40px; text-align: center; cursor: pointer; margin-bottom: 30px; 
+        }
+        .upload-zone.drag { border-color: #ff6b6b; background: #fff5f5; }
+        .board { 
+            background: white; border-radius: 15px; padding: 30px; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 20px; min-height: 400px; 
+        }
+        .file-item { 
+            border: 2px solid #eee; border-radius: 10px; padding: 15px; 
+            text-align: center; cursor: pointer; 
+        }
+        .file-item:hover { border-color: #ff6b6b; transform: translateY(-3px); }
+        .file-thumb { font-size: 3em; margin-bottom: 10px; }
+        .file-name { font-weight: bold; margin-bottom: 5px; }
+        .count { position: fixed; top: 20px; right: 20px; background: white; padding: 10px 20px; border-radius: 20px; }
     </style>
- </head>
- <body>
-   <iframe id='framey' frameborder = 0></iframe>
- </body>
- <script>
-   var webpages = [];
-   //---------------just change the webpage URLs
-   //the webpages need to hosted on https sites - if you want more than two just create a new line using the same code as below
-   //just change the link to the google form
-   webpages.push("https://docs.google.com/forms/d/e/1FAIpQLScN7xhuQxV5v4Wz4tBw4VMdnJHstLBUzUNbMtltgRirHfv-sw/viewform?usp=sf_link");
-   webpages.push("https://docs.google.com/forms/d/e/1FAIpQLSfa_DE0O41TCtlLKr9WxHbVFUwqStTrkznFI_TPL2kQ1mSEYQ/viewform?usp=sf_link");
-   //------------------------------------------
-   var random_page = webpages[Math.floor(Math.random()*webpages.length)];
-   document.getElementById("framey").src = random_page;
- </script>
+</head>
+<body>
+    <div class="container">
+        <h1>📌 Доска для презентаций</h1>
+        <div class="count" id="count">Файлов: 0</div>
+        
+        <!-- 🔥 НАСТРОЙТЕ ТУТ 🔥 -->
+        <script>
+            GITHUB = {
+                owner: "ea.troitskaya@mail.ru",
+                repo: "test23w23.github.io", 
+                token: "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"
+            };
+        </script>
+        
+        <div class="upload-zone" id="dropzone">
+            <p>📁 Перетащите PDF, PPT сюда или кликните</p>
+            <input type="file" id="fileInput" multiple accept=".pdf,.ppt,.pptx" style="display:none">
+        </div>
+        <div class="board" id="board"></div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let filesList = JSON.parse(localStorage.getItem('files')) || [];
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const board = document.getElementById('board');
+        const count = document.getElementById('count');
+
+        // 🔥 Drag & Drop - ПРОСТОЙ
+        dropzone.ondragover = dropzone.ondragenter = e => {
+            e.preventDefault();
+            dropzone.classList.add('drag');
+        };
+        
+        dropzone.ondragleave = dropzone.ondrop = e => {
+            e.preventDefault();
+            dropzone.classList.remove('drag');
+            if (e.type === 'drop') uploadFiles(e.dataTransfer.files);
+        };
+
+        // 🔥 Клик
+        dropzone.onclick = () => fileInput.click();
+        fileInput.onchange = e => uploadFiles(e.target.files);
+
+        // 🔥 Загрузка БЕЗ РЕКУРСИИ
+        async function uploadFiles(fileList) {
+            const files = Array.from(fileList);
+            for (let file of files) {
+                if (file.size > 20*1024*1024 || !/\.(pdf|ppt|pptx)$/i.test(file.name)) {
+                    alert('Только PDF/PPT до 20МБ');
+                    continue;
+                }
+
+                try {
+                    const url = await uploadGitHub(file);
+                    filesList.unshift({name: file.name, size: file.size, url, date: Date.now()});
+                    localStorage.setItem('files', JSON.stringify(filesList));
+                    showFiles();
+                } catch(e) {
+                    alert('Ошибка: ' + e.message);
+                }
+            }
+        }
+
+        // 🔥 GitHub API
+        async function uploadGitHub(file) {
+            const config = GITHUB;
+            const name = `uploads/${Date.now()}_${file.name.replace(/[^a-z0-9.-]/gi, '_')}`;
+            
+            const buffer = await file.arrayBuffer();
+            const content = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
+            const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${name}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Добавлен ${file.name}`,
+                    content: content
+                })
+            });
+
+            if (!res.ok) throw new Error('GitHub ошибка');
+            return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/main/${name}`;
+        }
+
+        // 🔥 ОТОБРАЖЕНИЕ - БЕЗ СОБЫТИЙ В ЦИКЛЕ
+        function showFiles() {
+            board.innerHTML = '';
+            count.textContent = `Файлов: ${filesList.length}`;
+            
+            for (let i = filesList.length - 1; i >= 0; i--) {
+                const f = filesList[i];
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <div class="file-thumb">${icon(f.name)}</div>
+                    <div class="file-name">${f.name}</div>
+                    <div>${(f.size/1024/1024).toFixed(1)} МБ</div>
+                `;
+                div.onclick = () => window.open(f.url, '_blank');
+                board.appendChild(div);
+            }
+        }
+
+        function icon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            return ext === 'pdf' ? '📄' : ext.includes('ppt') ? '📊' : '📎';
+        }
+
+        // 🔥 СТАРТ
+        showFiles();
+    </script>
+</body>
 </html>
+
