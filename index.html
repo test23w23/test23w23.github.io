@@ -788,7 +788,7 @@
                 
                 // Используем Microsoft Office Online Viewer с параметрами для презентации
                 // Это даст нам полноэкранный режим слайд-шоу
-                frame.src = \`https://view.officeapps.live.com/op/embed.aspx?src=\${encodedUrl}&amp;embedded=true&amp;wdAr=1.7777777777777777\`;
+                frame.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(this.fileUrl)}&action=embedview&wdAr=1.7777777777777777&wdStartOn=2&wdHideHeaders=1&wdHideSheetTabs=1&wdHideComments=1&wdHideFormulaBar=1&wdHideBorder=1&wdHideGridlines=1&wdInteractive=false&wdComments=none&wdDownloadButton=false&wdMinButton=false&wdPrintButton=false`;
                 
                 // Для PPT мы не знаем точное количество слайдов
                 this.totalSlides = 1;
