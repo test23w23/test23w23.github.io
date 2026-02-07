@@ -303,19 +303,72 @@
             overflow: hidden;
         }
         
-        /* Яндекс.Документы в полноэкранном режиме */
-        .yandex-docs-container {
+        /* PDF просмотрщик в полноэкранном режиме */
+        .pdf-viewer-container {
             width: 100%;
             height: 100%;
             display: none;
-            background: white;
+            align-items: center;
+            justify-content: center;
+            background: #525659;
         }
         
-        .yandex-docs-frame {
+        .pdf-slide-wrapper {
             width: 100%;
             height: 100%;
-            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-slide-canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* Альтернативный просмотр через новое окно */
+        .external-view-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
             background: white;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .external-view-icon {
+            font-size: 60px;
+            color: #667eea;
+        }
+        
+        .external-view-text {
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.5;
+        }
+        
+        .external-view-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .external-view-button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
         }
         
         /* Индикатор для слайд-шоу */
@@ -338,7 +391,7 @@
             opacity: 1;
         }
         
-        /* Навигационные подсказки */
+        /* Навигационные подсказки для PDF */
         .nav-hint {
             position: absolute;
             top: 50%;
@@ -457,6 +510,8 @@
             margin-bottom: 15px;
         }
     </style>
+    <!-- PDF.js библиотеки -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -467,8 +522,9 @@
             <ul style="margin: 10px 0; padding-left: 20px;">
                 <li><strong>Выберите файл:</strong> нажмите кнопку или перетащите файл в выделенную область</li>
                 <li><strong>Поддерживаемые форматы:</strong> PDF, PPT, PPTX (максимум 2 ГБ через Яндекс.Диск)</li>
-                <li><strong>Просмотр:</strong> нажмите "Просмотр" для открытия в режиме слайд-шоу через Яндекс.Документы</li>
-                <li><strong>Управление слайд-шоу:</strong> ← → для навигации, F11 - полноэкранный режим браузера</li>
+                <li><strong>Просмотр PDF:</strong> нажмите "Просмотр" для открытия в режиме слайд-шоу прямо на сайте</li>
+                <li><strong>Просмотр PPT/PPTX:</strong> файлы открываются в новом окне в Яндекс.Документах</li>
+                <li><strong>Управление слайд-шоу PDF:</strong> ← → для навигации, F11 - полноэкранный режим</li>
                 <li><strong>Скачивание:</strong> нажмите "Скачать" для сохранения файла на компьютер</li>
                 <li><strong>Удаление:</strong> нажмите "Удалить" для удаления файла из Яндекс.Диска</li>
             </ul>
@@ -522,20 +578,37 @@
         </div>
     </div>
     
-    <!-- Полноэкранный режим слайд-шоу через Яндекс.Документы -->
+    <!-- Полноэкранный режим слайд-шоу -->
     <div id="fullscreenOverlay" class="fullscreen-overlay" tabindex="-1">
-        <!-- Яндекс.Документы в полноэкранном режиме -->
-        <div id="yandexDocsContainer" class="yandex-docs-container">
-            <iframe id="yandexDocsFrame" class="yandex-docs-frame"></iframe>
+        <!-- PDF просмотрщик -->
+        <div id="pdfViewerContainer" class="pdf-viewer-container">
+            <div class="pdf-slide-wrapper">
+                <canvas id="pdfSlideCanvas" class="pdf-slide-canvas"></canvas>
+            </div>
+            <div class="nav-hint nav-hint-left" onclick="prevSlide()">‹</div>
+            <div class="nav-hint nav-hint-right" onclick="nextSlide()">›</div>
         </div>
         
-        <!-- Навигационные подсказки -->
-        <div class="nav-hint nav-hint-left" onclick="exitFullscreen()">‹</div>
-        <div class="nav-hint nav-hint-right" onclick="enterFullscreen()">›</div>
+        <!-- Альтернативный просмотр для PPT/PPTX -->
+        <div id="externalViewContainer" class="external-view-container">
+            <div class="external-view-icon">📊</div>
+            <div class="external-view-text">
+                <strong>Презентация открывается в новом окне</strong><br><br>
+                Из-за ограничений безопасности Яндекс.Диска,<br>
+                презентации в формате PPT/PPTX открываются в новой вкладке.<br><br>
+                После открытия нажмите F11 для полноэкранного режима.
+            </div>
+            <button id="externalViewButton" class="external-view-button">
+                Открыть презентацию в новом окне
+            </button>
+            <button class="external-view-button" onclick="closeFullscreenView()" style="background: #718096;">
+                Вернуться к списку
+            </button>
+        </div>
         
         <!-- Индикатор слайда -->
         <div id="slideIndicator" class="slide-indicator">
-            Режим презентации Яндекс.Документов
+            Слайд <span id="currentSlideNumber">1</span> из <span id="totalSlidesNumber">1</span>
         </div>
         
         <!-- Подсказка для выхода -->
@@ -569,6 +642,17 @@
         let yandexFiles = [];
         let currentFileIndex = 0;
         let hideIndicatorsTimer = null;
+        
+        // Переменные для PDF.js
+        let pdfDoc = null;
+        let pdfPageNum = 1;
+        let pdfPageRendering = false;
+        let pdfPageNumPending = null;
+        const pdfCanvas = document.getElementById('pdfSlideCanvas');
+        const pdfCtx = pdfCanvas.getContext('2d');
+        
+        // Текущий URL для внешнего просмотра
+        let externalViewUrl = '';
         
         // =========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===========
         
@@ -608,6 +692,12 @@
                 indicator.classList.remove('visible');
                 exitHint.classList.remove('visible');
             }, 3000);
+        }
+        
+        // Обновление индикатора слайда для PDF
+        function updateSlideIndicator() {
+            document.getElementById('currentSlideNumber').textContent = pdfPageNum;
+            document.getElementById('totalSlidesNumber').textContent = pdfDoc ? pdfDoc.numPages : 1;
         }
         
         // =========== DRAG AND DROP ФУНКЦИИ ===========
@@ -856,7 +946,7 @@
                         <div class="file-name" title="${fileName}">${fileName}</div>
                         <div class="file-size">${fileExt} • ${fileSize} • ${new Date(file.created).toLocaleDateString()}</div>
                         <div class="card-buttons">
-                            <button class="view-btn" onclick="viewInYandexDocs('${filePath}', '${fileName}', ${index})">
+                            <button class="view-btn" onclick="viewPresentation('${filePath}', '${fileName}', ${index})">
                                 👁️ Просмотр
                             </button>
                             <button class="download-btn" onclick="downloadYandexFile('${filePath}', '${fileName}')">
@@ -960,10 +1050,71 @@
             }
         }
         
-        // =========== ПРОСМОТР В ЯНДЕКС.ДОКУМЕНТАХ ===========
+        // =========== PDF.JS ФУНКЦИИ ===========
         
-        // Просмотр файла в Яндекс.Документах
-        async function viewInYandexDocs(filePath, fileName, index) {
+        // Рендеринг страницы PDF в режиме слайд-шоу
+        function renderPDFSlide(num) {
+            if (pdfPageRendering) {
+                pdfPageNumPending = num;
+                return;
+            }
+            pdfPageNum = num;
+            pdfPageRendering = true;
+            
+            pdfDoc.getPage(num).then(function(page) {
+                // Рассчитываем масштаб для заполнения экрана
+                const containerWidth = window.innerWidth;
+                const containerHeight = window.innerHeight;
+                const pageWidth = page.getViewport({ scale: 1 }).width;
+                const pageHeight = page.getViewport({ scale: 1 }).height;
+                
+                // Масштабируем так, чтобы слайд помещался на экран
+                const scaleX = containerWidth / pageWidth;
+                const scaleY = containerHeight / pageHeight;
+                const scale = Math.min(scaleX, scaleY) * 0.95; // 95% для небольших отступов
+                
+                const viewport = page.getViewport({ scale: scale });
+                pdfCanvas.height = viewport.height;
+                pdfCanvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: pdfCtx,
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                renderTask.promise.then(function() {
+                    pdfPageRendering = false;
+                    if (pdfPageNumPending !== null) {
+                        renderPDFSlide(pdfPageNumPending);
+                        pdfPageNumPending = null;
+                    }
+                    
+                    updateSlideIndicator();
+                    showIndicators();
+                });
+            });
+        }
+        
+        // Следующий слайд PDF
+        function nextSlide() {
+            if (pdfPageNum >= pdfDoc.numPages) return;
+            pdfPageNum++;
+            renderPDFSlide(pdfPageNum);
+        }
+        
+        // Предыдущий слайд PDF
+        function prevSlide() {
+            if (pdfPageNum <= 1) return;
+            pdfPageNum--;
+            renderPDFSlide(pdfPageNum);
+        }
+        
+        // =========== ПРОСМОТР ПРЕЗЕНТАЦИЙ ===========
+        
+        // Просмотр презентации
+        async function viewPresentation(filePath, fileName, index) {
             if (!YANDEX_CONFIG.token) {
                 showStatus('❌ Токен Яндекс.Диска не настроен', 'error');
                 return;
@@ -971,186 +1122,188 @@
             
             currentFileIndex = index;
             
-            showStatus('⏳ Открываем презентацию...', 'info');
+            const fileExt = fileName.split('.').pop().toLowerCase();
             
-            try {
-                // Получаем публичную ссылку на файл
-                const response = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${filePath}`, {
-                    headers: {
-                        'Authorization': `OAuth ${YANDEX_CONFIG.token}`
-                    }
-                });
+            // Для PDF открываем прямо на сайте
+            if (fileExt === 'pdf') {
+                showStatus('⏳ Загружаем PDF презентацию...', 'info');
                 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Ошибка получения информации о файле');
-                }
-                
-                const fileInfo = await response.json();
-                
-                let viewUrl = '';
-                const fileExt = fileName.split('.').pop().toLowerCase();
-                
-                if (fileInfo.public_url) {
-                    // Если файл уже опубликован, используем публичную ссылку
-                    viewUrl = fileInfo.public_url.replace('disk.yandex.ru', 'disk.yandex.com');
-                } else {
-                    // Если файл не опубликован, публикуем его
-                    if (YANDEX_CONFIG.autoPublish) {
-                        await publishYandexFile(filePath);
-                        
-                        // Получаем обновленную информацию с публичной ссылкой
-                        const updatedResponse = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${filePath}`, {
-                            headers: {
-                                'Authorization': `OAuth ${YANDEX_CONFIG.token}`
-                            }
-                        });
-                        
-                        if (updatedResponse.ok) {
-                            const updatedInfo = await updatedResponse.json();
-                            if (updatedInfo.public_url) {
-                                viewUrl = updatedInfo.public_url.replace('disk.yandex.ru', 'disk.yandex.com');
-                            }
-                        }
-                    }
-                    
-                    // Если все еще нет публичной ссылки, получаем временную ссылку для скачивания
-                    if (!viewUrl) {
-                        const downloadResponse = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/download?path=${filePath}`, {
-                            headers: {
-                                'Authorization': `OAuth ${YANDEX_CONFIG.token}`
-                            }
-                        });
-                        
-                        if (downloadResponse.ok) {
-                            const downloadData = await downloadResponse.json();
-                            viewUrl = downloadData.href;
-                        }
-                    }
-                }
-                
-                if (!viewUrl) {
-                    throw new Error('Не удалось получить ссылку для просмотра');
-                }
-                
-                // Формируем URL для Яндекс.Документов
-                let yandexDocsUrl = '';
-                
-                if (fileExt === 'pdf') {
-                    // Для PDF используем встроенный просмотрщик Яндекс.Диска
-                    yandexDocsUrl = `https://disk.yandex.ru/client/embedded-viewer?path=${encodeURIComponent(filePath)}`;
-                } else {
-                    // Для PPT/PPTX используем просмотр через Яндекс.Документы
-                    yandexDocsUrl = viewUrl;
-                    
-                    // Пробуем открыть в режиме презентации
-                    if (viewUrl.includes('yandex.')) {
-                        yandexDocsUrl = viewUrl.replace('/client/disk', '/preview');
-                    }
-                }
-                
-                // Открываем в полноэкранном режиме
-                openFullscreenView(yandexDocsUrl, fileName);
-                
-            } catch (error) {
-                console.error('View error:', error);
-                showStatus(`❌ Ошибка открытия: ${error.message}`, 'error');
-                
-                // Пробуем альтернативный способ
                 try {
-                    const downloadResponse = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/download?path=${filePath}`, {
+                    // Получаем ссылку для скачивания
+                    const response = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/download?path=${filePath}`, {
                         headers: {
                             'Authorization': `OAuth ${YANDEX_CONFIG.token}`
                         }
                     });
                     
-                    if (downloadResponse.ok) {
-                        const downloadData = await downloadResponse.json();
-                        openFullscreenView(downloadData.href, fileName);
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Ошибка получения ссылки');
                     }
-                } catch (fallbackError) {
-                    showStatus('❌ Не удалось открыть файл. Проверьте настройки публикации.', 'error');
+                    
+                    const data = await response.json();
+                    
+                    // Загружаем PDF
+                    const loadingTask = pdfjsLib.getDocument(data.href);
+                    loadingTask.promise.then(function(loadedPdfDoc) {
+                        pdfDoc = loadedPdfDoc;
+                        pdfPageNum = 1;
+                        
+                        renderPDFSlide(1);
+                        openPdfViewer(fileName);
+                        
+                    }).catch(function(error) {
+                        console.error('PDF loading error:', error);
+                        showStatus('❌ Ошибка загрузки PDF файла', 'error');
+                    });
+                    
+                } catch (error) {
+                    console.error('View error:', error);
+                    showStatus(`❌ Ошибка: ${error.message}`, 'error');
+                }
+            } 
+            // Для PPT/PPTX открываем в новом окне
+            else if (fileExt === 'ppt' || fileExt === 'pptx') {
+                showStatus('⏳ Получаем ссылку для просмотра...', 'info');
+                
+                try {
+                    // Получаем информацию о файле
+                    const response = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${filePath}`, {
+                        headers: {
+                            'Authorization': `OAuth ${YANDEX_CONFIG.token}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Ошибка получения информации о файле');
+                    }
+                    
+                    const fileInfo = await response.json();
+                    
+                    let publicUrl = '';
+                    
+                    if (fileInfo.public_url) {
+                        // Используем публичную ссылку
+                        publicUrl = fileInfo.public_url;
+                    } else {
+                        // Если файл не опубликован, пытаемся опубликовать
+                        if (YANDEX_CONFIG.autoPublish) {
+                            await publishYandexFile(filePath);
+                            
+                            // Получаем обновленную информацию
+                            const updatedResponse = await fetch(`https://cloud-api.yandex.net/v1/disk/resources?path=${filePath}`, {
+                                headers: {
+                                    'Authorization': `OAuth ${YANDEX_CONFIG.token}`
+                                }
+                            });
+                            
+                            if (updatedResponse.ok) {
+                                const updatedInfo = await updatedResponse.json();
+                                if (updatedInfo.public_url) {
+                                    publicUrl = updatedInfo.public_url;
+                                }
+                            }
+                        }
+                        
+                        // Если все еще нет публичной ссылки, получаем временную
+                        if (!publicUrl) {
+                            const downloadResponse = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/download?path=${filePath}`, {
+                                headers: {
+                                    'Authorization': `OAuth ${YANDEX_CONFIG.token}`
+                                }
+                            });
+                            
+                            if (downloadResponse.ok) {
+                                const downloadData = await downloadResponse.json();
+                                publicUrl = downloadData.href;
+                            }
+                        }
+                    }
+                    
+                    if (publicUrl) {
+                        externalViewUrl = publicUrl;
+                        openExternalViewer(fileName, publicUrl);
+                    } else {
+                        showStatus('❌ Не удалось получить ссылку для просмотра', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('View error:', error);
+                    showStatus(`❌ Ошибка: ${error.message}`, 'error');
                 }
             }
         }
         
-        // Открыть полноэкранный просмотр
-        function openFullscreenView(url, fileName) {
+        // Открыть PDF просмотрщик
+        function openPdfViewer(fileName) {
             const overlay = document.getElementById('fullscreenOverlay');
-            const yandexDocsContainer = document.getElementById('yandexDocsContainer');
-            const yandexDocsFrame = document.getElementById('yandexDocsFrame');
+            const pdfViewer = document.getElementById('pdfViewerContainer');
+            const externalViewer = document.getElementById('externalViewContainer');
             
-            // Настройка iframe
-            yandexDocsFrame.src = url;
-            yandexDocsContainer.style.display = 'block';
+            pdfViewer.style.display = 'flex';
+            externalViewer.style.display = 'none';
             
-            // Показываем overlay
             overlay.style.display = 'block';
             document.body.style.overflow = 'hidden';
             document.title = `Презентация: ${fileName}`;
             
-            // Устанавливаем фокус для обработки клавиш
             overlay.focus();
-            
-            // Показываем индикаторы
             showIndicators();
             
-            // Скрываем курсор через 2 секунды
             setTimeout(() => {
                 overlay.style.cursor = 'none';
             }, 2000);
         }
         
-        // Вход в полноэкранный режим браузера
-        function enterFullscreen() {
-            const element = document.documentElement;
+        // Открыть внешний просмотрщик для PPT/PPTX
+        function openExternalViewer(fileName, url) {
+            const overlay = document.getElementById('fullscreenOverlay');
+            const pdfViewer = document.getElementById('pdfViewerContainer');
+            const externalViewer = document.getElementById('externalViewContainer');
+            const externalButton = document.getElementById('externalViewButton');
             
-            if (element.requestFullscreen) {
-                element.requestFullscreen();
-            } else if (element.mozRequestFullScreen) {
-                element.mozRequestFullScreen();
-            } else if (element.webkitRequestFullscreen) {
-                element.webkitRequestFullscreen();
-            } else if (element.msRequestFullscreen) {
-                element.msRequestFullscreen();
-            }
+            pdfViewer.style.display = 'none';
+            externalViewer.style.display = 'flex';
             
+            // Настраиваем кнопку для открытия в новом окне
+            externalButton.onclick = function() {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            };
+            
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            document.title = `Презентация: ${fileName}`;
+            
+            overlay.focus();
             showIndicators();
         }
         
-        // Выход из полноэкранного режима
-        function exitFullscreen() {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
+        // Открыть презентацию во внешнем окне
+        function openExternalPresentation() {
+            if (externalViewUrl) {
+                window.open(externalViewUrl, '_blank', 'noopener,noreferrer');
             }
-            
-            showIndicators();
         }
         
         // Закрыть просмотр
         function closeFullscreenView() {
             const overlay = document.getElementById('fullscreenOverlay');
-            const yandexDocsContainer = document.getElementById('yandexDocsContainer');
-            const yandexDocsFrame = document.getElementById('yandexDocsFrame');
+            const pdfViewer = document.getElementById('pdfViewerContainer');
+            const externalViewer = document.getElementById('externalViewContainer');
             
-            // Сбрасываем iframe
-            yandexDocsFrame.src = '';
-            yandexDocsContainer.style.display = 'none';
+            pdfViewer.style.display = 'none';
+            externalViewer.style.display = 'none';
             
-            // Скрываем overlay
             overlay.style.display = 'none';
             document.body.style.overflow = 'auto';
             overlay.style.cursor = 'default';
             document.title = 'Онлайн-доска для презентаций';
             
             // Выходим из полноэкранного режима браузера
-            exitFullscreen();
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
             
             clearTimeout(hideIndicatorsTimer);
         }
@@ -1160,7 +1313,7 @@
             if (currentFileIndex < yandexFiles.length - 1) {
                 currentFileIndex++;
                 const file = yandexFiles[currentFileIndex];
-                viewInYandexDocs(encodeURIComponent(file.path), file.name, currentFileIndex);
+                viewPresentation(encodeURIComponent(file.path), file.name, currentFileIndex);
             }
         }
         
@@ -1168,7 +1321,7 @@
             if (currentFileIndex > 0) {
                 currentFileIndex--;
                 const file = yandexFiles[currentFileIndex];
-                viewInYandexDocs(encodeURIComponent(file.path), file.name, currentFileIndex);
+                viewPresentation(encodeURIComponent(file.path), file.name, currentFileIndex);
             }
         }
         
@@ -1196,38 +1349,53 @@
                 case 'ArrowRight':
                 case ' ':
                 case 'PageDown':
-                    nextFile();
+                    // Проверяем, какой просмотрщик активен
+                    const pdfViewer = document.getElementById('pdfViewerContainer');
+                    if (pdfViewer.style.display === 'flex') {
+                        nextSlide();
+                    } else {
+                        nextFile();
+                    }
                     break;
                 case 'ArrowLeft':
                 case 'PageUp':
-                    prevFile();
+                    const pdfViewerActive = document.getElementById('pdfViewerContainer');
+                    if (pdfViewerActive.style.display === 'flex') {
+                        prevSlide();
+                    } else {
+                        prevFile();
+                    }
                     break;
                 case 'F11':
                     if (!document.fullscreenElement) {
-                        enterFullscreen();
+                        document.documentElement.requestFullscreen();
                     } else {
-                        exitFullscreen();
+                        document.exitFullscreen();
                     }
                     break;
                 case 'f':
                 case 'F':
-                    // Альтернативная клавиша для полноэкранного режима
                     if (!document.fullscreenElement) {
-                        enterFullscreen();
+                        document.documentElement.requestFullscreen();
                     }
                     break;
                 case 'Home':
-                    if (yandexFiles.length > 0) {
-                        currentFileIndex = 0;
-                        const file = yandexFiles[0];
-                        viewInYandexDocs(encodeURIComponent(file.path), file.name, 0);
+                    if (pdfDoc) {
+                        pdfPageNum = 1;
+                        renderPDFSlide(pdfPageNum);
                     }
                     break;
                 case 'End':
-                    if (yandexFiles.length > 0) {
-                        currentFileIndex = yandexFiles.length - 1;
-                        const file = yandexFiles[currentFileIndex];
-                        viewInYandexDocs(encodeURIComponent(file.path), file.name, currentFileIndex);
+                    if (pdfDoc) {
+                        pdfPageNum = pdfDoc.numPages;
+                        renderPDFSlide(pdfPageNum);
+                    }
+                    break;
+                case 'o':
+                case 'O':
+                    // Быстрое открытие внешней презентации
+                    if (externalViewUrl) {
+                        openExternalPresentation();
                     }
                     break;
             }
@@ -1240,6 +1408,14 @@
         // Обработка изменения полноэкранного режима браузера
         document.addEventListener('fullscreenchange', function() {
             showIndicators();
+        });
+        
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            const overlay = document.getElementById('fullscreenOverlay');
+            if (overlay.style.display === 'block' && pdfDoc) {
+                renderPDFSlide(pdfPageNum);
+            }
         });
         
         // =========== ИНИЦИАЛИЗАЦИЯ ===========
