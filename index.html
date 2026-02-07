@@ -819,16 +819,24 @@
                     const pageWidth = page.getViewport({ scale: 1 }).width;
                     const pageHeight = page.getViewport({ scale: 1 }).height;
                     
+                    // Рассчитываем масштаб, чтобы слайд полностью поместился на экране (сохраняя пропорции)
                     const scaleX = containerWidth / pageWidth;
                     const scaleY = containerHeight / pageHeight;
-                    const scale = Math.min(scaleX, scaleY) * 0.95;
+                    
+                    // Используем МИНИМАЛЬНЫЙ масштаб, чтобы слайд полностью поместился
+                    const scale = Math.min(scaleX, scaleY);
                     
                     const viewport = page.getViewport({ scale: scale });
                     const canvas = document.getElementById('pdfSlideCanvas');
                     const ctx = canvas.getContext('2d');
                     
-                    canvas.height = viewport.height;
+                    // Устанавливаем размер canvas под размер viewport (размер слайда)
                     canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    // Очищаем canvas черным цветом
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                     
                     const renderContext = {
                         canvasContext: ctx,
