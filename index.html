@@ -473,7 +473,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: white;
+            background: black;
         }
         
         /* Элементы управления - появляются ТОЛЬКО по клику мыши */
@@ -638,6 +638,14 @@
         body.inactive-cursor {
             cursor: none !important;
         }
+        
+        /* Стиль для PPT/PPTX в полноэкранном режиме */
+        .ppt-fullscreen-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: black;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>
 </head>
@@ -652,7 +660,11 @@
         
         <!-- Слайд-шоу для PPT/PPTX -->
         <div id="pptSlideshow" class="ppt-slideshow-container">
-            <iframe id="pptSlideshowFrame" class="ppt-slideshow-frame"></iframe>
+            <iframe id="pptSlideshowFrame" class="ppt-slideshow-frame" 
+                    frameborder="0" 
+                    allowfullscreen="true" 
+                    mozallowfullscreen="true" 
+                    webkitallowfullscreen="true"></iframe>
         </div>
         
         <!-- Элементы управления -->
@@ -694,7 +706,6 @@
             controlsVisible: false,
             controlsTimeout: null,
             cursorTimeout: null,
-            mouseActive: false,
             
             init: function() {
                 console.log('Инициализация слайд-шоу:', this.fileName, this.presentationType);
@@ -765,17 +776,31 @@
                 console.log('Загрузка PPT:', this.fileUrl);
                 
                 const frame = document.getElementById('pptSlideshowFrame');
-                // Используем Google Docs Viewer для просмотра
-                frame.src = \`https://docs.google.com/gview?url=\${encodeURIComponent(this.fileUrl)}&embedded=true&rm=minimal\`;
+                
+                // Используем Microsoft Office Online Viewer для полноэкранного режима слайд-шоу
+                // Этот сервис лучше поддерживает режим слайд-шоу
+                const encodedUrl = encodeURIComponent(this.fileUrl);
+                
+                // Устанавливаем iframe на весь экран с параметрами для слайд-шоу
+                frame.style.width = '100%';
+                frame.style.height = '100%';
+                frame.style.border = 'none';
+                
+                // Используем Microsoft Office Online Viewer с параметрами для презентации
+                // Это даст нам полноэкранный режим слайд-шоу
+                frame.src = \`https://view.officeapps.live.com/op/embed.aspx?src=\${encodedUrl}&amp;embedded=true&amp;wdAr=1.7777777777777777\`;
                 
                 // Для PPT мы не знаем точное количество слайдов
                 this.totalSlides = 1;
                 this.updateCounter();
                 
-                // Скрыть загрузку через 3 секунды
+                // Скрыть загрузку через 5 секунд (нужно больше времени для загрузки PPT)
                 setTimeout(() => {
                     this.hideLoading();
-                }, 3000);
+                }, 5000);
+                
+                // Слушаем сообщения от iframe для обновления счетчика слайдов
+                window.addEventListener('message', this.handleFrameMessage.bind(this), false);
             },
             
             renderPDFSlide: function(num) {
@@ -830,20 +855,7 @@
                     }
                 } else if (this.presentationType === 'ppt' || this.presentationType === 'pptx') {
                     // Для PPT отправляем клавишу вправо в iframe
-                    try {
-                        const frame = document.getElementById('pptSlideshowFrame');
-                        if (frame.contentWindow) {
-                            const event = new KeyboardEvent('keydown', {
-                                key: 'ArrowRight',
-                                code: 'ArrowRight',
-                                keyCode: 39,
-                                bubbles: true
-                            });
-                            frame.contentWindow.dispatchEvent(event);
-                        }
-                    } catch (e) {
-                        console.log('Не удалось управлять PPT через iframe');
-                    }
+                    this.sendKeyToFrame('ArrowRight');
                 }
             },
             
@@ -855,20 +867,40 @@
                     }
                 } else if (this.presentationType === 'ppt' || this.presentationType === 'pptx') {
                     // Для PPT отправляем клавишу влево в iframe
-                    try {
-                        const frame = document.getElementById('pptSlideshowFrame');
-                        if (frame.contentWindow) {
-                            const event = new KeyboardEvent('keydown', {
-                                key: 'ArrowLeft',
-                                code: 'ArrowLeft',
-                                keyCode: 37,
-                                bubbles: true
-                            });
-                            frame.contentWindow.dispatchEvent(event);
-                        }
-                    } catch (e) {
-                        console.log('Не удалось управлять PPT через iframe');
+                    this.sendKeyToFrame('ArrowLeft');
+                }
+            },
+            
+            sendKeyToFrame: function(key) {
+                try {
+                    const frame = document.getElementById('pptSlideshowFrame');
+                    if (frame && frame.contentWindow) {
+                        // Создаем событие клавиши
+                        const event = new KeyboardEvent('keydown', {
+                            key: key,
+                            code: key === 'ArrowRight' ? 'ArrowRight' : 'ArrowLeft',
+                            keyCode: key === 'ArrowRight' ? 39 : 37,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        
+                        // Отправляем событие в iframe
+                        frame.contentWindow.dispatchEvent(event);
+                        
+                        // Также пытаемся отправить сообщение
+                        frame.contentWindow.postMessage({ action: 'navigate', direction: key === 'ArrowRight' ? 'next' : 'prev' }, '*');
                     }
+                } catch (e) {
+                    console.log('Не удалось управлять PPT через iframe:', e);
+                }
+            },
+            
+            handleFrameMessage: function(event) {
+                // Обрабатываем сообщения от iframe
+                if (event.data && event.data.type === 'slideChange') {
+                    this.currentSlide = event.data.currentSlide || this.currentSlide + 1;
+                    this.totalSlides = event.data.totalSlides || this.totalSlides;
+                    this.updateCounter();
                 }
             },
             
