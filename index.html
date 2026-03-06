@@ -336,7 +336,8 @@
                 <div class="drop-zone-content">
                     <div class="drop-zone-icon">📁</div>
                     <div class="drop-zone-text">Перетащите файл сюда</div>
-                    <div class="drop-zone-hint">или нажмите кнопку ниже</div>
+                    <div class="drop-zone-hint">или нажмите кнопку "Выбрать файл"</div>
+                    <div class="drop-zone-text">Затем нажмите кнопку "Загрузить на доску"</div>
                 </div>
             </div>
             
@@ -364,7 +365,7 @@
         
         <div class="viewer-section">
             <div class="viewer-header">
-                <h2>📚 Загруженные презентаций</h2>
+                <h2>📚 Загруженные презентации</h2>
                 <button class="refresh-btn" onclick="loadPresentations(true)">
                     Обновить список
                 </button>
@@ -1304,10 +1305,9 @@
                     
                     const card = document.createElement('div');
                     card.className = 'presentation-card';
-                                       
+                  
                     
                     card.innerHTML = `
-                        <div class="file-icon">${icon}</div>
                         <div class="file-name" title="${fileName}">${fileName}</div>
                         <div class="file-size">${fileExt} • ${fileSize}</div>
                         <div class="card-buttons">
