@@ -575,6 +575,23 @@
             text-align: center;
         }
         
+        /* Новая кнопка F11 синего цвета */
+        .fullscreen-btn {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin: 0 10px;
+        }
+        
+        .fullscreen-btn:hover {
+            background: #2c5282;
+        }
+        
         .close-btn {
             background: #e53e3e;
             color: white;
@@ -677,10 +694,11 @@
             <button class="control-btn next" onclick="slideshow.nextSlide()">›</button>
         </div>
         
-        <!-- Панель информации -->
+        <!-- Панель информации (с добавленной кнопкой F11) -->
         <div class="info-panel">
             <div id="fileTitle" class="file-title">${fileName}</div>
             <div id="slideCounter" class="slide-counter">1/1</div>
+            <button class="fullscreen-btn" onclick="slideshow.toggleFullscreen()">F11</button>
             <button class="close-btn" onclick="window.close()">✕ Закрыть</button>
         </div>
         
@@ -965,7 +983,7 @@
             // Обработка клика мыши - ТОЛЬКО клик показывает элементы управления
             handleMouseClick: function(e) {
                 // Если кликнули по кнопке управления, не показываем/скрываем панель
-                if (e.target.closest('.control-btn') || e.target.closest('.close-btn')) {
+                if (e.target.closest('.control-btn') || e.target.closest('.close-btn') || e.target.closest('.fullscreen-btn')) {
                     return;
                 }
                 
