@@ -101,14 +101,14 @@
 				/**
 				 * Отправляет результаты в Google Apps Script Web App
 				 */
-				function sendResultsToSheet(score, userName) {
+				function sendResultsToSheet(sp, USER_NAME) {
 					// ЗАМЕНИТЕ НА СВОЙ URL ПОСЛЕ ПУБЛИКАЦИИ WEB APP
 					var url = 'https://script.google.com/macros/s/AKfycbwgeEjLPvDF6juwX1lD40sILVc8XDI7nE6ZsoKF38rdeojzUn7N7YuAbJdKl5UeiwM0/exec';
 					
 					var data = {
 						timestamp: new Date().toISOString(),
-						userName: userName || 'Аноним',
-						score: score,
+						USER_NAME: USER_NAME || 'Аноним',
+						sp: sp,
 						userAgent: navigator.userAgent
 					};
 
