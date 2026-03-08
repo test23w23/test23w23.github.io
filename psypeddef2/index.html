@@ -112,6 +112,8 @@
 						userAgent: navigator.userAgent
 					};
 
+console.log('sendResultsToSheet вызвана, sp=' + sp + ', USER_NAME=' + USER_NAME);
+					
 					// Используем fetch с режимом 'no-cors' для обхода CORS (данные уйдут, но ответ не прочитаем)
 					fetch(url, {
 						method: 'POST',
