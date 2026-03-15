@@ -1,55 +1,66 @@
-name: Deploy Presentation Board
+name: Deploy Multiple Presentation Boards
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]   # или main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Create presentations folder if not exists
+
+      # Создаём необходимые папки для каждой доски
+      - name: Prepare presentation folders
         run: |
-          mkdir -p presentations
-          if [ ! -f presentations/.gitkeep ]; then
-            echo "# Presentations folder" > presentations/.gitkeep
-          fi
-        
-      - name: Create .nojekyll file
-        run: echo "" > .nojekyll
-        
-      - name: Replace secrets in HTML
+          for board in present1 present2 present3; do
+            mkdir -p "$board/presentations"
+            if [ ! -f "$board/presentations/.gitkeep" ]; then
+              echo "# Presentations for $board" > "$board/presentations/.gitkeep"
+            fi
+            touch "$board/.nojekyll"
+          done
+
+      # Заменяем секреты в каждом index.html
+      - name: Replace secrets in all index.html
         env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}  # Используем ваш PAT
-          REPO_OWNER: ${{ secrets.REPO_OWNER }}
-          REPO_NAME: ${{ secrets.REPO_NAME }}
+          TOKEN: ${{ secrets.PAT_TOKEN }}
+          OWNER: ${{ secrets.REPO_OWNER }}
+          REPO: ${{ secrets.REPO_NAME }}
         run: |
-          # Заменяем заполнители на реальные значения
-          sed -i "s|{{PAT_TOKEN}}|$PAT_TOKEN|g" index.html
-          sed -i "s|{{REPO_OWNER}}|$REPO_OWNER|g" index.html
-          sed -i "s|{{REPO_NAME}}|$REPO_NAME|g" index.html
-          
-          # Удаляем комментарии для безопасности
-          sed -i '/<!--.*-->/d' index.html
-          sed -i '/\/\*.*\*\//d' index.html
-        
+          for board in present1 present2 present3; do
+            if [ -f "$board/index.html" ]; then
+              echo "Processing $board/index.html"
+              sed -i "s|{{PAT_TOKEN}}|$TOKEN|g" "$board/index.html"
+              sed -i "s|{{REPO_OWNER}}|$OWNER|g" "$board/index.html"
+              sed -i "s|{{REPO_NAME}}|$REPO|g" "$board/index.html"
+            else
+              echo "Warning: $board/index.html not found"
+            fi
+          done
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
-          
+          path: '.'   # Загружаем весь корень репозитория
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
