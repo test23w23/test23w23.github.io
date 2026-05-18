@@ -1,2 +1,0 @@
-mkdir presentations
-echo "# Presentations folder" > presentations/.gitkeep
