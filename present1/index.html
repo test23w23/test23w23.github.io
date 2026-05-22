@@ -328,8 +328,8 @@
   </style>
   <ul style="margin: 10px 0; padding-left: 20px;">
     <li class="extra-space"><strong>Требования к файлу:</strong> желательно PDF, в крайнем случае PPT, PPTX (максимум 25 МБ). В названии файла первое слово - фамилия автора</li>
-    <li class="extra-space"><strong>Загрузка файла:</strong> нажмите "Выбрать файл" или перетащите файл в выделенную область, затем нажмите "Загрузить на доску"</li>
-    <li><strong>Демонстрация:</strong> нажмите "Слайд-шоу", затем нажмите на клавиатуре F11. Переключение слайдов с помощью стрелок или пробела, F11 - выход</li>
+    <li class="extra-space"><strong>Загрузка файла:</strong> нажмите «Выбрать файл» или перетащите файл в выделенную область, затем нажмите «Загрузить на доску»</li>
+    <li><strong>Демонстрация:</strong> нажмите «Слайд-шоу», затем нажмите на клавиатуре F11. Переключение слайдов с помощью стрелок или пробела, F11 - выход</li>
     </ul>
 </div>
         
@@ -390,6 +390,56 @@
             branch: "master"
         };
         
+        // =========== ФУНКЦИИ БЕЗОПАСНОСТИ ===========
+        
+        /**
+         * Заменяет все небезопасные символы в имени файла на '_'.
+         * Оставляет буквы (латиница + кириллица), цифры, дефис и подчёркивание.
+         * Если после очистки имя пустое, возвращает 'presentation'.
+         */
+        function sanitizeFileName(originalName) {
+            const lastDot = originalName.lastIndexOf('.');
+            let name = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
+            const ext = lastDot > 0 ? originalName.substring(lastDot) : '';
+
+            // Всё, кроме букв, цифр, дефиса и подчёркивания → '_'
+            name = name.replace(/[^a-zA-Zа-яА-ЯёЁ0-9\-_]/g, '_');
+            name = name.replace(/_+/g, '_');       // убираем дубли подчёркиваний
+            name = name.replace(/^_|_$/g, '');     // убираем с краёв
+
+            if (!name) {
+                name = 'presentation';
+            }
+
+            name = name.substring(0, 100);         // ограничение длины
+            return name + ext;
+        }
+
+        /**
+         * Экранирование спецсимволов для вставки в HTML.
+         */
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        /**
+         * Экранирование строки для безопасной вставки в JavaScript-код (в кавычки).
+         */
+        function escapeJsString(text) {
+            return text.replace(/\\/g, '\\\\')
+                       .replace(/'/g, "\\'")
+                       .replace(/"/g, '\\"')
+                       .replace(/\n/g, '\\n')
+                       .replace(/\r/g, '\\r');
+        }
+        
         // =========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===========
         
         // Форматирование размера файла
@@ -417,15 +467,20 @@
             document.body.removeChild(link);
         }
         
-        // Создание HTML для окна слайд-шоу
+        // Создание HTML для окна слайд-шоу (с безопасным экранированием)
         function createSlideshowHTML(fileUrl, fileName, fileType) {
+            // Экранируем для HTML-контекста (заголовки, атрибуты)
+            const safeFileNameHtml = escapeHtml(fileName);
+            // Экранируем для JS-строки (внутри скрипта)
+            const safeFileNameJs = escapeJsString(fileName);
+
             return `
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Слайд-шоу: ${fileName}</title>
+    <title>Слайд-шоу: ${safeFileNameHtml}</title>
     <style>
         body {
             margin: 0;
@@ -696,7 +751,7 @@
         
         <!-- Панель информации (с добавленной кнопкой F11) -->
         <div class="info-panel">
-            <div id="fileTitle" class="file-title">${fileName}</div>
+            <div id="fileTitle" class="file-title">${safeFileNameHtml}</div>
             <div id="slideCounter" class="slide-counter">1/1</div>
             <button class="fullscreen-btn" onclick="slideshow.toggleFullscreen()">F11</button>
             <button class="close-btn" onclick="window.close()">✕ Закрыть</button>
@@ -723,7 +778,7 @@
             currentSlide: 1,
             totalSlides: 1,
             presentationType: '${fileType}',
-            fileName: '${fileName}',
+            fileName: '${safeFileNameJs}',
             fileUrl: '${fileUrl}',
             controlsVisible: false,
             controlsTimeout: null,
@@ -1106,8 +1161,13 @@
             const ext = fileName.split('.').pop().toLowerCase();
             
             if (ext === 'pdf' || ext === 'ppt' || ext === 'pptx') {
-                // Создаем HTML для нового окна
-                const slideshowHTML = createSlideshowHTML(url, fileName, ext);
+                // Создаем HTML для нового окна (fileName уже безопасное, т.к. пришло из списка,
+                // но на всякий случай пропускаем через sanitize? Оставим как есть,
+                // потому что в loadPresentations мы уже экранировали для отображения,
+                // а сюда передаётся оригинальное имя из данных GitHub, которое может быть с символами.
+                // Поэтому лучше здесь тоже очистить.
+                const safeName = sanitizeFileName(fileName);
+                const slideshowHTML = createSlideshowHTML(url, safeName, ext);
                 
                 // Открываем новое окно
                 const newWindow = window.open('', '_blank', 
@@ -1152,6 +1212,7 @@
                 if (e.dataTransfer.files.length) {
                     fileInput.files = e.dataTransfer.files;
                     const fileName = e.dataTransfer.files[0] ? e.dataTransfer.files[0].name : 'Файл не выбран';
+                    // Показываем оригинальное имя, но загрузка всё равно очистит
                     document.getElementById('fileName').textContent = fileName;
                     
                     const status = document.getElementById('uploadStatus');
@@ -1212,6 +1273,19 @@
                 return;
             }
             
+            // === НАЧАЛО ИЗМЕНЕНИЙ: безопасное имя ===
+            const originalName = file.name;
+            const safeName = sanitizeFileName(originalName);
+            
+            if (safeName !== originalName) {
+                status.className = '';
+                status.innerHTML = `⚠️ Имя файла было изменено:<br>"${escapeHtml(originalName)}" → "${escapeHtml(safeName)}"`;
+                status.style.display = 'block';
+                // Даём пользователю время увидеть предупреждение
+                await new Promise(resolve => setTimeout(resolve, 2500));
+            }
+            // === КОНЕЦ ИЗМЕНЕНИЙ ===
+            
             progressContainer.style.display = 'block';
             progressBar.style.width = '10%';
             
@@ -1219,9 +1293,10 @@
             status.textContent = '⏳ Загружаем файл...';
             status.style.display = 'block';
             
-            const fileName = encodeURIComponent(file.name);
+            // Используем safeName для URL и сообщения коммита
+            const fileNameEncoded = encodeURIComponent(safeName);
             const date = new Date().toISOString().split('T')[0];
-            const apiUrl = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.folder}/${fileName}`;
+            const apiUrl = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.folder}/${fileNameEncoded}`;
             
             try {
                 const reader = new FileReader();
@@ -1244,7 +1319,7 @@
                         'Accept': 'application/vnd.github.v3+json'
                     },
                     body: JSON.stringify({
-                        message: `Добавлена презентация: ${file.name} (${date})`,
+                        message: `Добавлена презентация: ${safeName} (${date})`,
                         content: base64,
                         branch: CONFIG.branch
                     })
@@ -1258,7 +1333,7 @@
                 progressBar.style.width = '100%';
                 
                 status.className = 'success';
-                status.textContent = '✅ Файл успешно загружен! Обновляем список...';
+                status.textContent = `✅ Файл успешно загружен как "${safeName}"! Обновляем список...`;
                 fileInput.value = '';
                 document.getElementById('fileName').textContent = 'Файл не выбран';
                 
@@ -1320,23 +1395,25 @@
                 listDiv.innerHTML = '';
                 
                 filteredFiles.forEach((file, index) => {
-                    const fileName = decodeURIComponent(file.name);
+                    const originalFileName = decodeURIComponent(file.name);
                     const fileSize = file.size ? formatSize(file.size) : 'Неизвестно';
-                    const fileExt = fileName.split('.').pop().toUpperCase();
+                    const fileExt = originalFileName.split('.').pop().toUpperCase();
                     const downloadUrl = file.download_url;
+                    
+                    // Безопасно экранируем для HTML
+                    const safeDisplayName = escapeHtml(originalFileName);
                     
                     const card = document.createElement('div');
                     card.className = 'presentation-card';
                   
-                    
                     card.innerHTML = `
-                        <div class="file-name" title="${fileName}">${fileName}</div>
+                        <div class="file-name" title="${safeDisplayName}">${safeDisplayName}</div>
                         <div class="file-size">${fileExt} • ${fileSize}</div>
                         <div class="card-buttons">
-                            <button class="view-btn" onclick="viewPresentation('${downloadUrl}', '${fileName}')">
+                            <button class="view-btn" onclick="viewPresentation('${downloadUrl}', '${escapeJsString(originalFileName)}')">
                                 🎬 Слайд-шоу
                             </button>
-                            <button class="download-btn" onclick="downloadFile('${downloadUrl}', '${fileName}')">
+                            <button class="download-btn" onclick="downloadFile('${downloadUrl}', '${escapeJsString(originalFileName)}')">
                                 ⬇️ Скачать
                             </button>
                         </div>
